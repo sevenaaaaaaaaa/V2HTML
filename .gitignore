@@ -1,0 +1,18 @@
+# 产物与运行时数据（含密钥）不入库
+output/
+server-data/
+.env
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 素材缓存（本机开发用）
+frames-cache/
+
+# 工作区标记与系统文件
+.v2c/
+.video_agent/
+.DS_Store

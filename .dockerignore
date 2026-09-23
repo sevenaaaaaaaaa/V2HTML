@@ -1,0 +1,8 @@
+output
+.git
+.v2c
+.video_agent
+__pycache__
+.DS_Store
+*.md
+!README.md

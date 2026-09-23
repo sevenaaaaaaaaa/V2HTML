@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V2HTML · 视频 ⇄ 内容引擎</title>
+<style>
+:root{--bg:#0d0a1a;--soft:#171232;--ink:#f4f2ff;--muted:#9d97c9;--accent:#8b7cf6;--accent2:#4dd6ff;--ok:#4cc38a;--warn:#e8b04b;--err:#e85d4a}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  min-height:100vh;padding:48px 24px;
+  background-image:radial-gradient(900px 460px at 85% -10%,rgba(139,124,246,.16),transparent 60%),
+                   radial-gradient(700px 400px at -5% 105%,rgba(77,214,255,.10),transparent 60%)}
+.wrap{max-width:880px;margin:0 auto}
+h1{font-size:34px;letter-spacing:.01em}
+h1 small{font-size:15px;color:var(--muted);font-weight:400;margin-left:14px;letter-spacing:.14em}
+.sub{color:var(--muted);margin:10px 0 30px;font-size:15px;line-height:1.6}
+.panel{background:var(--soft);border:1px solid rgba(139,124,246,.25);border-radius:16px;padding:24px;margin-bottom:26px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1;min-width:160px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em}
+input,select{width:100%;background:#0f0c22;border:1px solid rgba(157,151,201,.3);border-radius:10px;
+  color:var(--ink);padding:11px 13px;font-size:15px;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+button{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;
+  padding:12px 30px;font-size:16px;font-weight:650;cursor:pointer;letter-spacing:.06em}
+button:disabled{opacity:.5;cursor:default}
+.hint{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.7}
+.hint b{color:var(--warn)}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:650}
+.s-queued{background:rgba(157,151,201,.2)}.s-running{background:rgba(77,214,255,.18);color:var(--accent2)}
+.s-done{background:rgba(76,195,138,.18);color:var(--ok)}.s-error{background:rgba(232,93,74,.18);color:var(--err)}
+.s-paused_no_llm{background:rgba(232,176,75,.18);color:var(--warn)}
+.job{border-top:1px solid rgba(157,151,201,.15);padding:16px 0}
+.job:first-child{border-top:none}
+.jhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.jurl{color:var(--ink);font-size:14px;text-decoration:none;word-break:break-all}
+.jurl:hover{color:var(--accent2)}
+.jmeta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.7}
+.jmeta a{color:var(--accent2);text-decoration:none;margin-right:12px}
+.jmeta a:hover{text-decoration:underline}
+.steps{font-size:12.5px;color:var(--muted);margin-top:8px;font-family:"SF Mono",Menlo,monospace;line-height:1.8}
+.health{font-size:13px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+.health b{color:var(--ok)} .health .no{color:var(--warn)}
+a{color:var(--accent2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>V2HTML<small>视频 ⇄ HTML 双向内容引擎</small></h1>
+  <p class="sub">提交一条视频链接 → 自动抓取素材（字幕/转写/关键帧）→ LLM 语义重组 → 产出可直接上线的文档与重构型幻灯片。</p>
+  <div class="health" id="health"></div>
+
+  <div class="panel">
+    <div class="row">
+      <div style="flex:3;min-width:280px">
+        <label>视频链接（YouTube 等）</label>
+        <input id="url" placeholder="https://www.youtube.com/watch?v=xxxx">
+      </div>
+      <div>
+        <label>文体</label>
+        <select id="doc_type">
+          <option value="auto">自动判定</option><option value="tutorial">教程</option>
+          <option value="science">科普</option><option value="commentary">评论</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div>
+        <label>幻灯片主题</label>
+        <select id="theme"><option value="auto">跟随文体</option></select>
+      </div>
+      <div style="max-width:110px">
+        <label>帧数</label>
+        <input id="max_frames" type="number" value="24" min="8" max="48">
+      </div>
+      <div style="flex:0;display:flex;align-items:flex-end">
+        <button id="go">生成</button>
+      </div>
+    </div>
+    <p class="hint" id="formhint"></p>
+  </div>
+
+  <div class="panel" id="jobs-panel" style="display:none">
+    <div id="jobs"></div>
+  </div>
+
+  <p class="hint">产物同时落盘在服务器 <b>output/&lt;video_id&gt;/</b> 目录；幻灯片离线可用（→ 翻页 / O 总览 / F 全屏 / P 导出 PDF / T 切换主题）。</p>
+</div>
+
+<script>
+const THEMES = ["science","tutorial","commentary","terracotta","paper-doc","prism","aurora","glass","memphis","vapor","riso","broadsheet","luxe","academia","y2k","blueprint","pop","zen","swiss","bauhaus","deco","brutal","kraft","neon","geist","carbon","ant","tdesign","arco","material3"];
+const themeSel = document.getElementById('theme');
+THEMES.forEach(t => { const o = document.createElement('option'); o.value = o.textContent = t; themeSel.appendChild(o); });
+
+async function health(){
+  try{
+    const h = await (await fetch('api/health')).json();
+    document.getElementById('health').innerHTML =
+      `<span>LLM：${h.llm_configured ? '<b>已配置</b> '+h.llm_model : '<span class="no">未配置（设置 V2HTML_LLM_API_KEY 后启用语义生成）</span>'}</span>` +
+      `<span>代理：${h.proxy ? '<b>'+h.proxy+'</b>' : '直连'}</span><span>主题库：${h.themes} 个</span>` +
+      (h.auth ? '<span>已启用访问令牌</span>' : '');
+    document.getElementById('formhint').innerHTML = h.llm_configured ? '' :
+      '当前未配置 LLM API Key：任务会完成素材抓取与转写后暂停（<b>paused_no_llm</b>），配置后重新提交即可完成语义生成。';
+  }catch(e){ document.getElementById('health').textContent = '服务连接失败'; }
+}
+
+async function refresh(){
+  let jobs;
+  try{ jobs = await (await fetch('api/jobs')).json(); }catch(e){ return; }
+  const panel = document.getElementById('jobs-panel'), box = document.getElementById('jobs');
+  panel.style.display = jobs.length ? 'block' : 'none';
+  box.innerHTML = jobs.map(j => {
+    const d = j.video_id ? `/output/${j.video_id}` : null;
+    const links = j.status === 'done'
+      ? `<a href="${d}/slides.html" target="_blank">幻灯片</a><a href="api/jobs/${j.id}/doc" target="_blank">文档</a><a href="${d}/transcript.md" target="_blank">转写</a>`
+      : (j.error ? `错误：${j.error}` : '');
+    return `<div class="job">
+      <div class="jhead"><span class="badge s-${j.status}">${j.status}</span>
+        <a class="jurl" href="${j.url}" target="_blank">${j.url}</a>
+        <span style="font-size:12px;color:var(--muted)">${j.created} · ${j.doc_type}${j.theme && j.theme!=='auto' ? ' · '+j.theme : ''}</span></div>
+      <div class="jmeta">${links}</div>
+      <div class="steps">${(j.steps||[]).map(s => `+${s.t}s  ${s.msg}`).join('<br>')}</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('go').onclick = async function(){
+  this.disabled = true;
+  try{
+    const body = {url: document.getElementById('url').value.trim(),
+                  doc_type: document.getElementById('doc_type').value,
+                  theme: document.getElementById('theme').value,
+                  max_frames: +document.getElementById('max_frames').value || 24};
+    const r = await fetch('api/jobs', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    if(!r.ok){ alert((await r.json()).detail || '提交失败'); }
+    else { document.getElementById('url').value = ''; refresh(); }
+  } finally { this.disabled = false; }
+};
+
+health(); refresh(); setInterval(refresh, 2500);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+services:
+  v2html:
+    build: .
+    ports:
+      - "${V2HTML_BIND:-127.0.0.1:8410}:8400"
+    environment:
+      # 语义生成必需：任何 OpenAI 兼容接口（默认智谱 GLM；.env 可覆盖为 DeepSeek 等）
+      V2HTML_LLM_BASE_URL: "${V2HTML_LLM_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}"
+      V2HTML_LLM_API_KEY: "${V2HTML_LLM_API_KEY:?请在 .env 或环境变量中提供}"
+      V2HTML_LLM_MODEL: "${V2HTML_LLM_MODEL:-glm-4.7}"
+      V2HTML_LLM_MAX_TOKENS: "${V2HTML_LLM_MAX_TOKENS:-8192}"
+      V2HTML_LLM_VISION: "${V2HTML_LLM_VISION:-}"
+      V2HTML_WORKERS: "${V2HTML_WORKERS:-1}"
+      V2HTML_TOKEN: "${V2HTML_TOKEN:-}"
+      V2HTML_PROXY: "${V2HTML_PROXY:-}"
+    volumes:
+      - ./output:/app/output
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

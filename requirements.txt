@@ -1,0 +1,6 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+yt-dlp>=2025.1.1
+# 可选：无字幕视频的本地转写兜底（Apple Silicon 用 mlx-whisper，其余用 faster-whisper）
+# mlx-whisper
+# faster-whisper

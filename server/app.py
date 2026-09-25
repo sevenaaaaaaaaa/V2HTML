@@ -323,3 +323,6 @@ for _p in ("/admin", "/admin/jobs", "/admin/config"):
 
 
 app.mount("/output", StaticFiles(directory=OUT), name="output")
+DEMOS = ROOT / "demos"
+DEMOS.mkdir(exist_ok=True)
+app.mount("/demos", StaticFiles(directory=DEMOS), name="demos")

@@ -42,6 +42,17 @@ button:disabled{opacity:.5;cursor:default}
 .steps{font-size:12.5px;color:var(--muted);margin-top:8px;font-family:"SF Mono",Menlo,monospace;line-height:1.8}
 .health{font-size:13px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;margin-bottom:22px}
 .health b{color:var(--ok)} .health .no{color:var(--warn)}
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-bottom:8px}
+.demo{background:var(--soft);border:1px solid rgba(139,124,246,.25);border-radius:14px;overflow:hidden;
+  transition:transform .3s,box-shadow .3s}
+.demo:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.demo img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.demo .pad{padding:14px 16px 16px}
+.demo .t{font-size:14.5px;font-weight:700;line-height:1.45;margin-bottom:6px}
+.demo .meta{font-size:12px;color:var(--muted);margin-bottom:10px}
+.demo .lnks{display:flex;gap:12px}
+.demo .lnks a{font-size:12.5px;color:var(--accent2);text-decoration:none}
+.demo .lnks a:hover{text-decoration:underline}
 a{color:var(--accent2)}
 </style>
 </head>
@@ -50,6 +61,31 @@ a{color:var(--accent2)}
   <h1>V2HTML<small>视频 ⇄ HTML 双向内容引擎</small></h1>
   <p class="sub">提交一条视频链接 → 自动抓取素材（字幕/转写/关键帧）→ LLM 语义重组 → 产出可直接上线的文档与重构型幻灯片。</p>
   <div class="health" id="health"></div>
+
+  <div class="panel" style="border-color:rgba(77,214,255,.35)">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+      <h1 style="font-size:22px">示例作品</h1>
+      <span style="font-size:12.5px;color:var(--muted)">以下全部由本系统自动生成 · 点击即可放映</span>
+    </div>
+    <div class="demo-grid" style="margin-top:16px">
+      <div class="demo"><a href="output/aircAruvnKk/slides.html" target="_blank"><img src="demos/demo-science.png" alt="科普"></a>
+        <div class="pad"><div class="t">神经网络是怎么「看见」一个 3 的？</div>
+        <div class="meta">科普文章 + 14 页幻灯片 · 3Blue1Brown · science 主题</div>
+        <div class="lnks"><a href="output/aircAruvnKk/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/aircAruvnKk/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo"><a href="output/0pgCBV8CTZY/slides.html" target="_blank"><img src="demos/demo-commentary.png" alt="评论"></a>
+        <div class="pad"><div class="t">Anthropic 是真恐慌，还是 IPO 前的定价表演？</div>
+        <div class="meta">评论文章 + 10 页幻灯片 · Fireship · commentary 主题</div>
+        <div class="lnks"><a href="output/0pgCBV8CTZY/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/0pgCBV8CTZY/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo"><a href="output/DQdB7wFEygo/slides.html" target="_blank"><img src="demos/demo-tutorial.png" alt="教程"></a>
+        <div class="pad"><div class="t">Docker 上手：把 Node 应用装进容器</div>
+        <div class="meta">教程文档 + 12 页幻灯片 · The Coding Sloth · tutorial 主题</div>
+        <div class="lnks"><a href="output/DQdB7wFEygo/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/DQdB7wFEygo/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo"><a href="output/D4QyStJWgCc/slides.html" target="_blank"><img src="demos/demo-review.png" alt="评测"></a>
+        <div class="pad"><div class="t">Nothing Phone 4A / Pro 评测</div>
+        <div class="meta">评测纪要 + 10 页幻灯片 · MKBHD · geist 主题</div>
+        <div class="lnks"><a href="output/D4QyStJWgCc/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/D4QyStJWgCc/doc.md" target="_blank">📄 文章</a></div></div></div>
+    </div>
+  </div>
 
   <div class="panel">
     <div class="row">

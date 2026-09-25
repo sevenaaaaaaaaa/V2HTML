@@ -24,7 +24,8 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import (FileResponse, JSONResponse, PlainTextResponse,
+                               RedirectResponse)
 from fastapi.staticfiles import StaticFiles
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -306,6 +307,19 @@ def health():
 @app.get("/")
 def index():
     return FileResponse(ROOT / "server" / "static" / "index.html")
+
+
+# 裸路径别名：/admin → /admin/ 等（307 保留方法与登录态；兼容用户手输与旧链接）
+def _slash_alias(full_path: str):
+    def alias(request: Request):
+        rp = (request.scope.get("root_path") or "").rstrip("/")
+        return RedirectResponse(rp + full_path + "/", 307)
+    return alias
+
+
+for _p in ("/admin", "/admin/jobs", "/admin/config"):
+    app.get(_p)(_slash_alias(_p))
+    app.post(_p)(_slash_alias(_p))
 
 
 app.mount("/output", StaticFiles(directory=OUT), name="output")

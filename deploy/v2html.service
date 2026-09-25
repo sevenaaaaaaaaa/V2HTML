@@ -1,0 +1,20 @@
+# V2HTML 服务端 systemd 单元（原生部署，无 Docker）
+# 安装:
+#   cp deploy/v2html.service /etc/systemd/system/v2html.service
+#   systemctl daemon-reload && systemctl enable --now v2html
+# 注意: --root-path /VTH 用于 https://域名/VTH/ 子路径反代；根路径部署改为 --root-path / 或删除该参数
+
+[Unit]
+Description=V2HTML video-to-content engine
+After=network.target
+
+[Service]
+WorkingDirectory=/www/wwwroot/V2HTML
+EnvironmentFile=/www/wwwroot/V2HTML/.env
+Environment=PATH=/www/wwwroot/V2HTML/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+ExecStart=/www/wwwroot/V2HTML/.venv/bin/uvicorn --root-path /VTH server.app:app --host 127.0.0.1 --port 8410
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

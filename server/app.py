@@ -37,7 +37,7 @@ from server.admin import router as admin_router  # noqa: E402
 OUT = ROOT / "output"
 OUT.mkdir(exist_ok=True)
 
-app = FastAPI(title="V2HTML Server", version="0.2.0")
+app = FastAPI(title="V2HTML Server", version="0.2.0", redirect_slashes=False)
 app.include_router(admin_router)
 
 

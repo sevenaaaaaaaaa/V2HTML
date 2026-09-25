@@ -1,161 +1,198 @@
-# V2HTML — 视频 ⇄ HTML 双向内容引擎
+<div align="center">
 
-> 把一条 YouTube 视频变成可上线的高质量文档与讲课幻灯片；再把任意文章 / PPT 逆向变成可录制的动画视频。
-> 名字的由来：**视频 → HTML**（文档、幻灯片、动画都是 HTML），**HTML → 视频**（逆向）。
+# V2HTML
 
-## 产品愿景
+### 视频 ⇄ HTML 双向内容引擎
 
-1. **正向：视频 → 内容资产**
-   输入 YouTube 链接，通过「字幕/语音的语义分析 + 关键帧的画面分析」，产出可读性、实用性、逻辑性都很高的：
-   - 教程类视频 → **教程文档**（可复现的步骤、命令、避坑清单）
-   - 科普类视频 → **科普文章**（心智模型、分层深度、FAQ）
-   - 普通口播视频 → **评论文章**（论点、论据、反方视角、独立判断）
-   - 其他类型 → 适配性文章（访谈纪要、演讲实录、评测…）
-   - 同步产出**重构型幻灯片**：不是视频截图拼贴，而是按内容逻辑重新组织、用统一设计系统重新设计的 HTML 幻灯片。
+把一条 YouTube 视频，变成**可直接上线的文章**与**重新设计的可放映幻灯片**；再把任意文章，变成**可生成的视频物料**。
 
-2. **逆向：文章 / PPT → 视频**（三阶段路线）
-   - **提示词模式**（已支持）：生成分镜脚本 + 每个镜头的视频生成提示词（Sora / Veo / Kling / 即梦等通用格式）、旁白脚本、字幕文件。拿去任何视频生成工具即可。
-   - **HTML 动画模式**（已支持）：生成自包含的 HTML 动态演示——按时间轴播放的动效场景（motion graphics），可直接投屏讲课，或录屏成片。
-   - **视频直出模式**（规划中）：接入视频生成 API 的渲染管线，接口已在 `prompts/reverse-storyboard.md` 的分镜数据结构中预留。
+[![Python](https://img.shields.io/badge/python-3.12%2B-3670A0?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/backend-FastAPI-009485?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Slides Themes](https://img.shields.io/badge/slides%20themes-30-8b7cf6)](templates/slides.html)
+[![License](https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey)](#license)
 
-## 架构：脚本管确定性，Agent 管语义
+**[在线演示 · 幻灯片](https://nownexts.com/VTH/output/aircAruvnKk/slides.html)** ·
+**[管理后台](https://nownexts.com/VTH/admin)** ·
+[使用文档（中文）](#快速开始)
 
-```
-YouTube URL
-   │
-   ▼
-bin/v2h.py fetch        ── 代理探测、拉取元数据/字幕/音频（yt-dlp）
-bin/v2h.py transcribe   ── 字幕优先，缺失时调用本地 Whisper（若有）
-bin/v2h.py frames       ── ffmpeg 场景切变抽帧 + 生成联览图(contact sheet)
-   │
-   ▼  output/<video_id>/
-   │     meta.json  transcript.md  frames/  sheet.jpg
-   ▼
-语义核心（两种形态，产物同构）
-   ├─ 客户端：ZCode 技能 /v2html —— Agent 按 prompts/*.md 方法论执行
-   └─ 服务端：server/ —— 把同一套方法论组装为 LLM API 调用（可部署、可远程调用）
-   │
-   ▼
-doc.md / doc.html / slides.html
-   │
-   ▼
-Agent（/v2video 技能）   ── 逆向：storyboard.json + 提示词包 / HTML 动画
-```
+</div>
 
-**分工原则**：下载、转写、抽帧是确定性工作，交给脚本保证可复现；分类、结构重组、写作、幻灯片设计是语义工作。客户端形态由 Agent 亲自执行；服务端形态由 `server/generate.py` 把方法论提示词发给任意 OpenAI 兼容 LLM API 执行。`frames/` 里的帧只作为**画面参考与素材**（图表、演示画面可被精选嵌入），绝不等于幻灯片本身。
+---
 
-## 双形态：客户端 ⇄ 服务端
+## 它解决什么问题
 
-### 客户端形态（本机，推荐日常用）
+看视频学东西很慢，视频里的知识**没法搜索、没法引用、没法分享**；而把视频手工整理成文章和 PPT，一小时的视频往往要花三小时。
 
-- ZCode 里说一句话或 `/v2html <url>`，Agent 调用 `bin/v2h.py` + `prompts/` 方法论，亲自完成语义工作
-- 无需 API Key、无需联网服务（除视频下载），产物质量上限最高（Agent 可逐帧核对事实）
+V2HTML 把这件事变成一条命令：**确定性工作**（抓取、字幕、抽帧）交给脚本，**语义工作**（文体判定、结构重组、写作、幻灯片设计）交给 LLM——产出不是流水账字幕，而是按论证结构重写的、可直接发布的内容。
 
-### 服务端形态（可部署在服务器/家庭 NAS）
+| 视频类型 | 产出 | 示例 |
+|---|---|---|
+| 教程类 | 可复现的教程文档（命令逐字核对 + 避坑清单） | Docker 入门 → 教程 |
+| 科普类 | 分层递进的科普文章（直觉 → 机制 → 边界 + FAQ） | 3Blue1Brown → 科普 |
+| 口播评论 | 论点拆解 + 论据可信度分级（✅⚠️❌） | Fireship → 评论 |
+| 评测/访谈 | 评分卡前置的评测纪要 / 议题分组纪要 | MKBHD → 评测 |
 
-```bash
-# 本机启动
-pip3 install --user fastapi "uvicorn[standard]"   # 或 pip install -r requirements.txt
-bash server/run.sh                                 # http://0.0.0.0:8400
+**同一次分析，同时产出**：`doc.md`（文章）+ `slides.html`（30 主题重构型幻灯片，非截图拼贴）。
 
-# Docker 部署（推荐，自带 ffmpeg 与 Python3.12）
-V2HTML_LLM_API_KEY=你的key docker compose up -d --build
-```
+## 效果预览
 
-**已部署实例**：nownexts.com 服务器（172.96.253.73，宝塔 Apache），
-`/www/wwwroot/V2HTML`（与 openflow 站点同级）→ Docker 端口 `127.0.0.1:8410`，
-入口 **https://nownexts.com/VTH/**（Apache extension conf 反代，见下），
-LLM 复用 openflow 的 DeepSeek key（`data/ai-config.json`）。
-
-环境变量（写入部署目录 `.env`，chmod 600）：
-
-| 变量 | 说明 |
+| 科普 · 夜紫主题 | 评论 · 暖纸衬线主题 |
 |---|---|
-| `V2HTML_LLM_API_KEY` | **必填**。任何 OpenAI 兼容接口的 key |
-| `V2HTML_LLM_BASE_URL` | 默认智谱 GLM；可换 DeepSeek `https://api.deepseek.com/v1` 等 |
-| `V2HTML_LLM_MODEL` | 默认 `glm-4.7`；需支持长输出 |
-| `V2HTML_LLM_MAX_TOKENS` | 默认 8192（DeepSeek 上限） |
-| `V2HTML_PROXY` | 访问 YouTube 的代理；海外服务器直连即可（已验证 204） |
-| `V2HTML_TOKEN` | 公网部署建议设置；POST /api/jobs 需 Bearer 认证 |
-| `V2HTML_BIND` | Docker 端口映射，默认 `127.0.0.1:8410` |
+| ![科普封面](docs/images/hero-science.png) | ![评论封面](docs/images/commentary-fireship.png) |
+| ![结构页·嵌入原视频帧](docs/images/science-frame.png) | ![论据可信度记分板](docs/images/commentary-scoreboard.png) |
 
-**子路径反代（Apache）**：在 `/www/server/panel/vhost/apache/extension/<域名>/v2html.conf` 写入——
+| 教程 · 深空蓝主题 | 评测 · 纯黑极简主题 |
+|---|---|
+| ![Docker 教程](docs/images/tutorial-docker.png) | ![MKBHD 评测](docs/images/geist-mkbhd.png) |
 
-```apache
-ProxyPass /VTH/ http://127.0.0.1:8410/
-ProxyPassReverse /VTH/ http://127.0.0.1:8410/
-<Location "/VTH/">
-    Require all granted
-</Location>
+> 幻灯片为**重构**而非截图拼贴：跟随论证结构重组，仅嵌入含独有信息的原视频帧（图表/界面/演示物），每页标注原视频时间戳，浏览器即可放映（`→` 翻页 / `O` 总览 / `F` 全屏 / `P` 导出 PDF / `T` 切换 30 主题）。
+
+## 工作原理
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │  bin/v2h.py —— 确定性素材管线            │
+  YouTube URL ────▶ │  代理探测 · 480p视频 · 字幕(人工优先)     │
+                    │  场景抽帧 · 联览图 · ASR滚动去重          │
+                    └────────────────┬────────────────────────┘
+                                     ▼
+                    ┌─────────────────────────────────────────┐
+                    │  语义核心 —— 同一套方法论，两种形态        │
+                    │                                         │
+                    │  客户端: ZCode 技能按 prompts/ 亲自执行   │
+                    │  服务端: server/ 组装为 LLM API 调用      │
+                    │                                         │
+                    │  文体判定 → 文档写作 → 幻灯片编排          │
+                    └────────────────┬────────────────────────┘
+                                     ▼
+              doc.md ─── slides.html(30主题) ─── 自动推送 openflow
+                                     │
+                    ┌────────────────▼────────────────────────┐
+                    │  逆向 v2video：文章/PPT → 分镜提示词包     │
+                    │  （Sora/Veo/可灵）或 HTML 动画演示         │
+                    └─────────────────────────────────────────┘
 ```
 
-UI/API 已全部相对路径化，根路径与任意子路径反代通用。若站点在 Cloudflare 后面：
-应用已对所有响应发 `Cache-Control: no-store`；改动 UI 后建议在 CF 后台 Purge 一次。
+**设计契约**：`prompts/` 里沉淀的方法论（文体模板、幻灯片设计系统、防幻觉规则——数字逐字核对、补全显式标注、作者立场与写作者立场分离）是整个系统的核心资产，客户端与服务端共用。
 
-接口：`POST /api/jobs`（`{url, doc_type: auto|tutorial|science|commentary|other, theme, max_frames}`）·
-`GET /api/jobs/{id}`（进度与产物链接）· `GET /api/health` · Web UI 在 `/`。
-产物与客户端完全同构（`output/<video_id>/doc.md + slides.html`），slides.html 依旧离线可用、30 主题可切换。
-注意：① 服务端容器内无 Whisper，无字幕视频需装（`mlx-whisper`/`faster-whisper`）；
-② 未配置可用 LLM key 时任务在素材就绪后报错/暂停，中间产物不丢；
-③ 服务器磁盘余量需关注（每条视频缓存约 10–50MB）。
+## 快速开始
 
-## 使用
+### 客户端（配合 ZCode，质量上限最高）
 
 ```bash
-# 一次性准备（在 ZCode 中说一句话即可，技能会自动调用脚本）：
-#   “用 v2html 把 https://youtu.be/xxxx 转成教程文档和幻灯片”
-
-# 或手动分步：
-python3 bin/v2h.py fetch <youtube-url>       # 元数据 + 字幕 + 抽帧
-python3 bin/v2h.py transcribe <video_id>     # 仅当没有字幕时需要（需本地 Whisper）
-python3 bin/v2h.py status                    # 查看已有产物
+git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML
+pip3 install yt-dlp                      # ffmpeg 需已安装
+bash bin/install-skills.sh               # 注册 /v2html /v2video 技能
 ```
 
-Agent 侧技能（安装后全局可用）：
+之后在 ZCode 里说一句：**“用 v2html 把这条视频转成教程和幻灯片：<url>”** 即可。
 
-| 技能 | 作用 |
-|------|------|
-| `/v2html <url> [类型]` | 视频 → 分类判定 → 文档 + 幻灯片 |
-| `/v2video <文章/幻灯片路径> [模式]` | 文章/PPT → 分镜提示词包 / HTML 动画 |
-
-### 幻灯片主题库（30 个预设，四大家族）
-
-改 `<html data-theme="...">` 即换肤，放映中按 `T` 键循环预览：
-- **自研基础**：`science`（夜紫·科普）/ `tutorial`（深空蓝）/ `commentary`（暖纸衬线）
-- **产品风致敬**（键名无商标，只取气质）：`terracotta`（≈Claude 暖陶土）/ `paper-doc`（≈Notion）/ `prism`（≈Arc）/ `aurora`（≈Linear）
-- **当代平面风格**（组件级差异）：`glass` 毛玻璃 / `memphis` 孟菲斯 / `vapor` 蒸汽波 / `riso` 孔版印刷 / `broadsheet` 报刊编辑 / `luxe` 奢侈极简 / `academia` 暗色学院 / `y2k` 千禧 / `blueprint` 蓝图 / `pop` 波普漫画
-- **设计运动**：`zen` 日式极简 / `swiss` 国际主义 / `bauhaus` 包豪斯 / `deco` 装饰艺术 / `brutal` 新粗野 / `kraft` 牛皮纸实物 / `neon` 赛博未来
-- **设计系统收编**：`geist` / `carbon` / `ant` / `tdesign` / `arco` / `material3`
-
-明细与选型见 `prompts/slides.md`。
-
-## 目录
-
-```
-bin/v2h.py            单入口 CLI：fetch / transcribe / frames / status
-prompts/              方法论提示词包（Agent 的操作手册，可持续迭代）
-  classify.md             视频类型判定规则
-  doc-tutorial.md         教程文档写作法
-  doc-science.md          科普文章写作法
-  doc-commentary.md       评论文章写作法
-  doc-other.md            其他类型适配法
-  slides.md               重构型幻灯片设计系统
-  reverse-storyboard.md   逆向①：分镜 + 视频生成提示词（提示词模式）
-  reverse-htmlanim.md     逆向②：HTML 动画模式
-templates/slides.html 幻灯片运行时（自包含、离线可用的设计系统）
-skills/               技能源码（bin/install-skills.sh 安装到 ~/.agents/skills）
-output/<video_id>/    每条视频一个产物目录
-```
-
-## 依赖
-
-- 必需：`ffmpeg`、`python3`（自带）
-- `yt-dlp`：`pip3 install --user yt-dlp`（或 `brew install yt-dlp`，建议定期升级）
-- 代理：自动探测 `http_proxy` 环境变量及本机 6152/6153/7890 等常见端口（Surge/Clash）
-- 本地 Whisper（可选，字幕缺失时的兜底）：`pip3 install --user mlx-whisper`（Apple Silicon 推荐）或 `openai-whisper`
-
-## 安装技能到全局
+### 服务端（浏览器提交，全自动）
 
 ```bash
-bash bin/install-skills.sh    # 把 skills/ 同步到 ~/.agents/skills/，之后 /v2html /v2video 全局可用
+git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+echo "V2HTML_LLM_API_KEY=你的key" >> .env    # 任何 OpenAI 兼容接口
+bash server/run.sh                           # http://0.0.0.0:8400
 ```
+
+打开 `http://localhost:8400` 提交链接，等待产物；`/admin` 进入管理后台。
+
+<details>
+<summary><b>公网服务器部署（Apache 子路径 + systemd，本项目的线上形态）</b></summary>
+
+```bash
+# 1. 代码 + 环境（CentOS7 等老系统：uv 装 Python3.12，ffmpeg 用全静态构建）
+uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt
+# 2. 环境变量
+cat > .env <<EOT
+V2HTML_LLM_API_KEY=你的key
+V2HTML_LLM_BASE_URL=https://api.deepseek.com/v1
+V2HTML_LLM_MODEL=deepseek-chat
+EOT
+# 3. systemd
+cat > /etc/systemd/system/v2html.service <<UNIT
+[Service]
+WorkingDirectory=/www/wwwroot/V2HTML
+EnvironmentFile=/www/wwwroot/V2HTML/.env
+Environment=PATH=/www/wwwroot/V2HTML/bin:/usr/bin:/bin
+ExecStart=/www/wwwroot/V2HTML/.venv/bin/uvicorn server.app:app --host 127.0.0.1 --port 8410
+Restart=always
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl enable --now v2html
+# 4. Apache 子路径（nginx 同理，反代到 8410 即可）
+echo 'ProxyPass /VTH/ http://127.0.0.1:8410/
+ProxyPassReverse /VTH/ http://127.0.0.1:8410/' > /www/server/panel/vhost/apache/extension/<域名>/v2html.conf
+```
+
+管理后台：`https://你的域名/VTH/admin`（首次启动前运行
+`.venv/bin/python -c "import sys;sys.path.insert(0,'.');from server import auth;auth.set_credentials('admin','你的密码')"`）。
+
+</details>
+
+## 管理后台
+
+服务端自带 openflow 风格的管理后台（oklch 设计令牌、玻璃卡片、亮暗自适应）：仪表盘、任务管理（重试/推送/删除）、任务详情（执行日志 + 文档预览）、LLM 在线配置与连接测试、推送开关与发布状态切换。
+
+![管理后台登录](docs/images/admin-login.png)
+
+## 推送到 openflow
+
+与 [openflow](https://github.com/sevenaaaaaaaaa/openflow)（PHP 内容站点）深度集成：任务完成后自动把文章写入其内容库（幂等覆盖、写前备份、保持文件属主），附带来源视频链接与配套幻灯片链接，默认草稿态、后台一键发布。也提供 `POST /api/jobs/{id}/push` 手动触发。
+
+## HTTP API
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, max_frames}` |
+| `GET` | `/api/jobs` / `/api/jobs/{id}` | 任务列表 / 详情（进度、日志、产物链接） |
+| `GET` | `/api/jobs/{id}/doc` | 文档纯文本 |
+| `POST` | `/api/jobs/{id}/retry` `/push` `/delete` | 重试 / 推送 openflow / 删除 |
+| `GET` `/POST` | `/api/config` | 读取 / 更新 LLM 与推送配置 |
+| `GET` | `/api/health` | 健康检查（LLM/代理/推送状态） |
+
+公网部署时设置 `V2HTML_TOKEN`，写接口需要 `Authorization: Bearer <token>`。
+
+## 30 主题幻灯片库
+
+`<html data-theme="...">` 一键换肤，放映中按 `T` 实时循环；亮暗主题自动适配。
+
+| 家族 | 主题 |
+|---|---|
+| 自研基础 | `science` 夜紫（科普）· `tutorial` 深空蓝（教程）· `commentary` 暖纸衬线（评论） |
+| 产品风致敬（键名无商标） | `terracotta` ≈Claude · `paper-doc` ≈Notion · `prism` ≈Arc · `aurora` ≈Linear |
+| 当代平面风格（组件级差异） | `glass` 毛玻璃 · `memphis` 孟菲斯 · `vapor` 蒸汽波 · `riso` 孔版印刷 · `broadsheet` 报刊 · `luxe` 奢侈极简 · `academia` 暗色学院 · `y2k` 千禧 · `blueprint` 蓝图 · `pop` 波普 |
+| 设计运动 | `zen` 日式极简 · `swiss` 国际主义 · `bauhaus` 包豪斯 · `deco` 装饰艺术 · `brutal` 新粗野 · `kraft` 牛皮纸 · `neon` 赛博未来 |
+| 设计系统收编 | `geist` Vercel · `carbon` IBM · `ant` · `tdesign` · `arco` · `material3` |
+
+## 项目结构
+
+```
+bin/v2h.py            素材管线：fetch / transcribe / frames / status
+prompts/              方法论资产：文体写作法 ×4 · 幻灯片设计法 · 分类规则 · 逆向分镜法 ×2
+templates/slides.html 幻灯片引擎（单文件、零依赖、30 主题、防溢出、截图模式）
+server/               FastAPI 服务端：任务队列 · 管理后台 · LLM 热配置 · openflow 推送
+skills/               ZCode 客户端技能（/v2html /v2video）
+docs/images           本页配图
+```
+
+## Roadmap
+
+- [ ] 服务端接入 Whisper 容器（无字幕视频兜底）
+- [ ] 任务列表持久化（当前重启清空，产物不受影响）
+- [ ] 视频直出模式（分镜 JSON → 渲染 API）
+- [ ] 英文界面与多语言产出
+
+## 致谢
+
+方法论的诚实性规则受 3Blue1Brown、Fireship、MKBHD 等创作者的内容启发；设计系统收编自 [Vercel Geist](https://vercel.com/geist)、[IBM Carbon](https://carbondesignsystem.com)、[Ant Design](https://ant.design)、[TDesign](https://tdesign.tencent.com)、[Arco Design](https://arco.design)、[Material 3](https://m3.material.io) 的公开 token；[W3C Design Tokens](https://www.designtokens.org)。
+
+<div align="center">
+
+**V2HTML** — 看完一条视频，得到一堆可上线的内容。
+
+© 2026 · 保留所有权利 · 重建内容版权归原作者所有，发布前请确认授权
+
+</div>

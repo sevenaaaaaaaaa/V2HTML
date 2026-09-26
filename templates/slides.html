@@ -412,6 +412,8 @@ body.shot-all .slide{position:relative;inset:auto;flex:none;width:1280px;height:
   var cur=0;
   var qs=new URLSearchParams(location.search);
   var shot=qs.get('shot');
+  var urlTheme=qs.get('theme');
+  if(urlTheme) document.documentElement.dataset.theme=urlTheme;
 
   function fit(slide){            /* 内容溢出时整体缩小 .body */
     var body=slide.querySelector('.body'); if(!body) return;
@@ -506,6 +508,8 @@ body.shot-all .slide{position:relative;inset:auto;flex:none;width:1280px;height:
       var cur=document.documentElement.dataset.theme||'science';
       var nx=ts[(ts.indexOf(cur)+1)%ts.length];
       document.documentElement.dataset.theme=nx;
+      try{ var u=new URL(location); u.searchParams.set('theme',nx);
+           history.replaceState(null,'',u); }catch(e){}
       counter.textContent=nx; setTimeout(function(){counter.textContent=(cur+1)+' / '+slides.length},900);
     }
     else if(e.key==='?'){document.getElementById('help').classList.toggle('show')}

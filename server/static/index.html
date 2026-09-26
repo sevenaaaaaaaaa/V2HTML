@@ -1,95 +1,173 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>V2HTML · 视频 ⇄ 内容引擎</title>
+<title>V2HTML · 视频 ⇄ HTML 双向内容引擎</title>
+<!--
+  前台 · 设计语言对齐 OpenFlow 前台（oklch tokens / Space Grotesk / 玻璃卡片 / blob 背景）
+  亮暗切换：右上角按钮（存 localStorage），跟随系统偏好初始化
+-->
 <style>
-:root{--bg:#0d0a1a;--soft:#171232;--ink:#f4f2ff;--muted:#9d97c9;--accent:#8b7cf6;--accent2:#4dd6ff;--ok:#4cc38a;--warn:#e8b04b;--err:#e85d4a}
+/* ═══════ OpenFlow tokens（前台版）═══════ */
+:root{
+  --bg:oklch(96.5% .016 85);--bg-soft:oklch(94% .02 85);--surface:oklch(100% 0 0/.62);
+  --surface-strong:oklch(100% 0 0/.88);--fg:oklch(22% .02 70);--muted:oklch(46% .016 70);
+  --faint:oklch(51% .014 75);--border:oklch(86% .014 80);--border-strong:oklch(76% .02 80);
+  --hover:oklch(22% .02 70/.055);--accent:oklch(52% .17 258);--accent-strong:oklch(46% .17 258);
+  --accent-soft:oklch(52% .17 258/.12);--on-accent:oklch(100% 0 0);
+  --ok:oklch(58% .17 152);--ok-soft:oklch(58% .17 152/.12);
+  --warn:oklch(66% .15 75);--warn-soft:oklch(66% .15 75/.14);
+  --danger:oklch(55% .2 25);--danger-soft:oklch(55% .2 25/.12);
+  --glass:oklch(100% 0 0/.5);--glass-border:oklch(100% 0 0/.68);
+  --blob-a:oklch(72% .12 262/.30);--blob-b:oklch(70% .13 305/.24);--blob-c:oklch(74% .11 200/.22);
+  --shadow:0 24px 60px -24px oklch(30% .04 80/.28);--shadow-sm:0 10px 28px -14px oklch(30% .04 80/.22);
+  --r-lg:26px;--r-md:18px;--r-sm:12px;
+  --font:"Space Grotesk","PingFang SC","HarmonyOS Sans SC","MiSans","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+  --ease-spring:cubic-bezier(.32,.72,0,1);
+}
+[data-theme="dark"]{
+  --bg:oklch(19% .014 70);--bg-soft:oklch(22.5% .014 72);--surface:oklch(27% .016 75/.55);
+  --surface-strong:oklch(30% .016 75/.82);--fg:oklch(93% .008 85);--muted:oklch(70% .014 80);
+  --faint:oklch(64% .014 80);--border:oklch(100% 0 0/.1);--border-strong:oklch(100% 0 0/.2);
+  --hover:oklch(93% .008 85/.07);--accent:oklch(74% .13 258);--accent-strong:oklch(80% .12 258);
+  --accent-soft:oklch(74% .13 258/.15);--on-accent:oklch(16% .03 260);
+  --glass:oklch(30% .014 75/.5);--glass-border:oklch(100% 0 0/.15);
+  --blob-a:oklch(62% .13 262/.18);--blob-b:oklch(58% .14 305/.15);--blob-c:oklch(60% .12 200/.13);
+  --shadow:0 24px 60px -24px oklch(0% 0 0/.55);--shadow-sm:0 10px 28px -14px oklch(0% 0 0/.5);
+}
 *{box-sizing:border-box;margin:0}
-body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
-  min-height:100vh;padding:48px 24px;
-  background-image:radial-gradient(900px 460px at 85% -10%,rgba(139,124,246,.16),transparent 60%),
-                   radial-gradient(700px 400px at -5% 105%,rgba(77,214,255,.10),transparent 60%)}
-.wrap{max-width:880px;margin:0 auto}
-h1{font-size:34px;letter-spacing:.01em}
-h1 small{font-size:15px;color:var(--muted);font-weight:400;margin-left:14px;letter-spacing:.14em}
-.sub{color:var(--muted);margin:10px 0 30px;font-size:15px;line-height:1.6}
-.panel{background:var(--soft);border:1px solid rgba(139,124,246,.25);border-radius:16px;padding:24px;margin-bottom:26px}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100vh;
+  background-image:
+    radial-gradient(560px 460px at 86% -6%,var(--blob-a),transparent 65%),
+    radial-gradient(480px 420px at -4% 30%,var(--blob-b),transparent 62%),
+    radial-gradient(520px 460px at 45% 108%,var(--blob-c),transparent 60%);
+  background-attachment:fixed}
+.wrap{max-width:1060px;margin:0 auto;padding:56px 24px 80px}
+a{color:var(--accent);text-decoration:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:52px}
+.brand{font-size:21px;font-weight:750;letter-spacing:.01em}
+.brand small{display:block;font-size:11.5px;color:var(--muted);letter-spacing:.2em;font-weight:500;margin-top:2px}
+.topbar .acts{display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--on-accent);
+  border:none;border-radius:999px;padding:11px 22px;font-size:14.5px;font-weight:650;cursor:pointer;
+  font-family:var(--font);transition:transform .3s var(--ease-spring),box-shadow .3s}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.btn.ghost{background:var(--glass);color:var(--fg);border:1px solid var(--glass-border)}
+.btn.sm{padding:7px 14px;font-size:13px}
+.hero-center{text-align:center;margin-bottom:56px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.28em;
+  color:var(--accent-strong);font-weight:700;margin-bottom:18px}
+.kicker::before{content:"";width:26px;height:1.5px;background:var(--accent)}
+h1{font-size:clamp(30px,4.6vw,44px);line-height:1.22;letter-spacing:.005em;margin-bottom:16px}
+h1 i{font-style:normal;color:var(--accent)}
+.lead{font-size:16px;color:var(--muted);max-width:640px;margin:0 auto 28px;line-height:1.75}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.trust{margin-top:18px;font-size:12.5px;color:var(--faint);display:flex;gap:8px;justify-content:center;align-items:center}
+.trust .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-lg);
+  padding:26px 28px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);margin-bottom:26px}
+.panel h2{font-size:19px;margin-bottom:4px}
+.panel .ph{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.panel .ph .note{font-size:12.5px;color:var(--faint)}
 .row{display:flex;gap:12px;flex-wrap:wrap}
-.row>*{flex:1;min-width:160px}
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em}
-input,select{width:100%;background:#0f0c22;border:1px solid rgba(157,151,201,.3);border-radius:10px;
-  color:var(--ink);padding:11px 13px;font-size:15px;outline:none}
+.row>*{flex:1;min-width:150px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em}
+input,select{width:100%;background:var(--surface-strong);border:1px solid var(--border);border-radius:12px;
+  color:var(--fg);padding:12px 14px;font-size:15px;outline:none;font-family:var(--font);
+  transition:border-color .25s}
 input:focus,select:focus{border-color:var(--accent)}
-button{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;
-  padding:12px 30px;font-size:16px;font-weight:650;cursor:pointer;letter-spacing:.06em}
-button:disabled{opacity:.5;cursor:default}
-.hint{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.7}
+.hint{font-size:13px;color:var(--faint);margin-top:12px;line-height:1.7}
 .hint b{color:var(--warn)}
-.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:650}
-.s-queued{background:rgba(157,151,201,.2)}.s-running{background:rgba(77,214,255,.18);color:var(--accent2)}
-.s-done{background:rgba(76,195,138,.18);color:var(--ok)}.s-error{background:rgba(232,93,74,.18);color:var(--err)}
-.s-paused_no_llm{background:rgba(232,176,75,.18);color:var(--warn)}
-.job{border-top:1px solid rgba(157,151,201,.15);padding:16px 0}
-.job:first-child{border-top:none}
-.jhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.jurl{color:var(--ink);font-size:14px;text-decoration:none;word-break:break-all}
-.jurl:hover{color:var(--accent2)}
-.jmeta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.7}
-.jmeta a{color:var(--accent2);text-decoration:none;margin-right:12px}
-.jmeta a:hover{text-decoration:underline}
-.steps{font-size:12.5px;color:var(--muted);margin-top:8px;font-family:"SF Mono",Menlo,monospace;line-height:1.8}
-.health{font-size:13px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;margin-bottom:22px}
-.health b{color:var(--ok)} .health .no{color:var(--warn)}
-.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-bottom:8px}
-.demo{background:var(--soft);border:1px solid rgba(139,124,246,.25);border-radius:14px;overflow:hidden;
-  transition:transform .3s,box-shadow .3s}
-.demo:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.4)}
-.demo img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.health{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:26px}
+.health b{color:var(--ok);font-weight:700}.health .no{color:var(--warn);font-weight:700}
+/* demo 卡片 */
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.demo{background:var(--surface-strong);border:1px solid var(--border);border-radius:var(--r-md);
+  overflow:hidden;transition:transform .35s var(--ease-spring),box-shadow .35s}
+.demo:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.demo .thumb{position:relative;display:block;aspect-ratio:16/9;overflow:hidden}
+.demo .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--ease-spring)}
+.demo:hover .thumb img{transform:scale(1.045)}
+.demo .tag{position:absolute;left:12px;top:12px;background:var(--accent);color:var(--on-accent);
+  font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.08em}
 .demo .pad{padding:14px 16px 16px}
-.demo .t{font-size:14.5px;font-weight:700;line-height:1.45;margin-bottom:6px}
-.demo .meta{font-size:12px;color:var(--muted);margin-bottom:10px}
-.demo .lnks{display:flex;gap:12px}
-.demo .lnks a{font-size:12.5px;color:var(--accent2);text-decoration:none}
+.demo .t{font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:5px}
+.demo .meta{font-size:12px;color:var(--muted);margin-bottom:11px}
+.demo .lnks{display:flex;gap:14px}
+.demo .lnks a{font-size:12.5px;font-weight:600}
 .demo .lnks a:hover{text-decoration:underline}
-a{color:var(--accent2)}
+/* 任务区 */
+.job{border-top:1px solid var(--border);padding:15px 0}
+.job:first-child{border-top:none}
+.jhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{display:inline-block;padding:2px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.s-queued{background:var(--hover)}.s-running{background:var(--accent-soft);color:var(--accent-strong)}
+.s-done{background:var(--ok-soft);color:var(--ok)}.s-error{background:var(--danger-soft);color:var(--danger)}
+.s-paused_no_llm{background:var(--warn-soft);color:var(--warn)}
+.jmeta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.8}
+.jmeta a{font-weight:600}
+.steps{font-size:12px;color:var(--faint);font-family:var(--mono);line-height:1.8;margin-top:7px}
+footer{margin-top:44px;text-align:center;font-size:12.5px;color:var(--faint);line-height:2}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>V2HTML<small>视频 ⇄ HTML 双向内容引擎</small></h1>
-  <p class="sub">提交一条视频链接 → 自动抓取素材（字幕/转写/关键帧）→ LLM 语义重组 → 产出可直接上线的文档与重构型幻灯片。</p>
-  <div class="health" id="health"></div>
 
-  <div class="panel" style="border-color:rgba(77,214,255,.35)">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
-      <h1 style="font-size:22px">示例作品</h1>
-      <span style="font-size:12.5px;color:var(--muted)">以下全部由本系统自动生成 · 点击即可放映</span>
-    </div>
-    <div class="demo-grid" style="margin-top:16px">
-      <div class="demo"><a href="output/aircAruvnKk/slides.html" target="_blank"><img src="demos/demo-science.png" alt="科普"></a>
-        <div class="pad"><div class="t">神经网络是怎么「看见」一个 3 的？</div>
-        <div class="meta">科普文章 + 14 页幻灯片 · 3Blue1Brown · science 主题</div>
-        <div class="lnks"><a href="output/aircAruvnKk/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/aircAruvnKk/doc.md" target="_blank">📄 文章</a></div></div></div>
-      <div class="demo"><a href="output/0pgCBV8CTZY/slides.html" target="_blank"><img src="demos/demo-commentary.png" alt="评论"></a>
-        <div class="pad"><div class="t">Anthropic 是真恐慌，还是 IPO 前的定价表演？</div>
-        <div class="meta">评论文章 + 10 页幻灯片 · Fireship · commentary 主题</div>
-        <div class="lnks"><a href="output/0pgCBV8CTZY/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/0pgCBV8CTZY/doc.md" target="_blank">📄 文章</a></div></div></div>
-      <div class="demo"><a href="output/DQdB7wFEygo/slides.html" target="_blank"><img src="demos/demo-tutorial.png" alt="教程"></a>
-        <div class="pad"><div class="t">Docker 上手：把 Node 应用装进容器</div>
-        <div class="meta">教程文档 + 12 页幻灯片 · The Coding Sloth · tutorial 主题</div>
-        <div class="lnks"><a href="output/DQdB7wFEygo/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/DQdB7wFEygo/doc.md" target="_blank">📄 文章</a></div></div></div>
-      <div class="demo"><a href="output/D4QyStJWgCc/slides.html" target="_blank"><img src="demos/demo-review.png" alt="评测"></a>
-        <div class="pad"><div class="t">Nothing Phone 4A / Pro 评测</div>
-        <div class="meta">评测纪要 + 10 页幻灯片 · MKBHD · geist 主题</div>
-        <div class="lnks"><a href="output/D4QyStJWgCc/slides.html" target="_blank">▶ 放映幻灯片</a><a href="output/D4QyStJWgCc/doc.md" target="_blank">📄 文章</a></div></div></div>
+  <div class="topbar">
+    <div class="brand">V2HTML<small>视频 ⇄ 内容引擎</small></div>
+    <div class="acts">
+      <button class="btn ghost sm" id="tbtn" title="切换亮暗">🌗 主题</button>
+      <a class="btn ghost sm" href="admin/login" target="_blank">⚙ 管理</a>
     </div>
   </div>
 
-  <div class="panel">
+  <div class="hero-center">
+    <span class="kicker">V2HTML · 视频转内容引擎</span>
+    <h1>看完一条视频，<br>得到<i>一堆可上线的内容</i></h1>
+    <p class="lead">提交一条 YouTube 链接：自动抓取素材（字幕 · 转写 · 关键帧）→ LLM 按文体方法论重组 → 产出可直接发布的文章与重新设计的可放映幻灯片。</p>
+    <div class="cta-row">
+      <a class="btn" href="#submit">开始转换一条视频</a>
+      <a class="btn ghost" href="#demos">先看示例作品</a>
+    </div>
+    <div class="trust"><span class="dot"></span>四类文体自动判定 · 30 套幻灯片主题 · 产物离线可用</div>
+  </div>
+
+  <div class="health" id="health"></div>
+
+  <!-- ═══════ 示例作品 ═══════ -->
+  <div class="panel" id="demos">
+    <div class="ph">
+      <h2>示例作品</h2>
+      <span class="note">以下全部由本系统自动生成 · 幻灯片内可按 T 键切换 30 主题</span>
+    </div>
+    <div class="demo-grid">
+      <div class="demo"><a class="thumb" href="output/aircAruvnKk/slides.html" target="_blank"><img src="demos/demo-science.png" alt="科普"><span class="tag">科普</span></a>
+        <div class="pad"><div class="t">神经网络是怎么「看见」一个 3 的？</div>
+        <div class="meta">3Blue1Brown · science 主题 · 14 页</div>
+        <div class="lnks"><a href="output/aircAruvnKk/slides.html" target="_blank">▶ 幻灯片</a><a href="output/aircAruvnKk/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo"><a class="thumb" href="output/0pgCBV8CTZY/slides.html" target="_blank"><img src="demos/demo-commentary.png" alt="评论"><span class="tag">评论</span></a>
+        <div class="pad"><div class="t">Anthropic 是真恐慌，还是 IPO 前的定价表演？</div>
+        <div class="meta">Fireship · commentary 主题 · 10 页</div>
+        <div class="lnks"><a href="output/0pgCBV8CTZY/slides.html" target="_blank">▶ 幻灯片</a><a href="output/0pgCBV8CTZY/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo"><a class="thumb" href="output/DQdB7wFEygo/slides.html" target="_blank"><img src="demos/demo-tutorial.png" alt="教程"><span class="tag">教程</span></a>
+        <div class="pad"><div class="t">Docker 上手：把 Node 应用装进容器</div>
+        <div class="meta">The Coding Sloth · tutorial 主题 · 12 页</div>
+        <div class="lnks"><a href="output/DQdB7wFEygo/slides.html" target="_blank">▶ 幻灯片</a><a href="output/DQdB7wFEygo/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo"><a class="thumb" href="output/D4QyStJWgCc/slides.html" target="_blank"><img src="demos/demo-review.png" alt="评测"><span class="tag">评测</span></a>
+        <div class="pad"><div class="t">Nothing Phone 4A / Pro 评测</div>
+        <div class="meta">MKBHD · geist 主题 · 10 页</div>
+        <div class="lnks"><a href="output/D4QyStJWgCc/slides.html" target="_blank">▶ 幻灯片</a><a href="output/D4QyStJWgCc/doc.md" target="_blank">📄 文章</a></div></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════ 提交任务 ═══════ -->
+  <div class="panel" id="submit">
+    <div class="ph"><h2>转换一条视频</h2><span class="note">约 2 分钟 · 产出文章 + 可放映幻灯片</span></div>
     <div class="row">
-      <div style="flex:3;min-width:280px">
+      <div style="flex:3;min-width:260px">
         <label>视频链接（YouTube 等）</label>
         <input id="url" placeholder="https://www.youtube.com/watch?v=xxxx">
       </div>
@@ -105,22 +183,22 @@ a{color:var(--accent2)}
         <label>幻灯片主题</label>
         <select id="theme"><option value="auto">跟随文体</option></select>
       </div>
-      <div style="max-width:110px">
+      <div style="max-width:104px">
         <label>帧数</label>
         <input id="max_frames" type="number" value="24" min="8" max="48">
       </div>
       <div style="flex:0;display:flex;align-items:flex-end">
-        <button id="go">生成</button>
+        <button class="btn" id="go">生成</button>
       </div>
     </div>
     <p class="hint" id="formhint"></p>
-  </div>
-
-  <div class="panel" id="jobs-panel" style="display:none">
     <div id="jobs"></div>
   </div>
 
-  <p class="hint"><a href="admin/" style="color:var(--accent2)">⚙ 管理后台</a> · 产物同时落盘在服务器 <b>output/&lt;video_id&gt;/</b> 目录；幻灯片离线可用（→ 翻页 / O 总览 / F 全屏 / P 导出 PDF / T 切换主题）。</p>
+  <footer>
+    V2HTML — 脚本管确定性 · LLM 管语义 · <a href="https://github.com/sevenaaaaaaaaa/V2HTML" target="_blank">GitHub 开源</a><br>
+    产物落盘于服务器 output/ 目录 · 重建内容版权归原作者所有，发布前请确认授权
+  </footer>
 </div>
 
 <script>
@@ -128,32 +206,42 @@ const THEMES = ["science","tutorial","commentary","terracotta","paper-doc","pris
 const themeSel = document.getElementById('theme');
 THEMES.forEach(t => { const o = document.createElement('option'); o.value = o.textContent = t; themeSel.appendChild(o); });
 
+/* ── 亮暗切换（对齐 openflow 的 data-theme 机制）── */
+const saved = localStorage.getItem('v2h-ui-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+else if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
+document.getElementById('tbtn').onclick = () => {
+  const nx = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = nx;
+  localStorage.setItem('v2h-ui-theme', nx);
+};
+
 async function health(){
   try{
     const h = await (await fetch('api/health')).json();
     document.getElementById('health').innerHTML =
-      `<span>LLM：${h.llm_configured ? '<b>已配置</b> '+h.llm_model : '<span class="no">未配置（设置 V2HTML_LLM_API_KEY 后启用语义生成）</span>'}</span>` +
-      `<span>代理：${h.proxy ? '<b>'+h.proxy+'</b>' : '直连'}</span><span>主题库：${h.themes} 个</span>` +
-      (h.auth ? '<span>已启用访问令牌</span>' : '');
+      `<span>LLM：<b>${h.llm_configured ? '已配置 · ' + h.llm_model : '<span class="no">未配置</span>'}</b></span>` +
+      `<span>代理：${h.proxy ? '已检测' : '直连'}</span>` +
+      `<span>推送 openflow：${h.push_enabled ? '<b>开启 · ' + h.push_status + '</b>' : '关闭'}</span>` +
+      `<span>主题库：${h.themes} 套</span>`;
     document.getElementById('formhint').innerHTML = h.llm_configured ? '' :
-      '当前未配置 LLM API Key：任务会完成素材抓取与转写后暂停（<b>paused_no_llm</b>），配置后重新提交即可完成语义生成。';
+      '当前未配置 LLM API Key：任务会在素材就绪后暂停，去 <a href="admin/config/" target="_blank">管理后台</a> 配置后重试即可。';
   }catch(e){ document.getElementById('health').textContent = '服务连接失败'; }
 }
 
 async function refresh(){
-  let jobs;
-  try{ jobs = await (await fetch('api/jobs')).json(); }catch(e){ return; }
-  const panel = document.getElementById('jobs-panel'), box = document.getElementById('jobs');
-  panel.style.display = jobs.length ? 'block' : 'none';
-  box.innerHTML = jobs.map(j => {
-    const d = j.video_id ? `/output/${j.video_id}` : null;
+  let jobs; try{ jobs = await (await fetch('api/jobs')).json(); }catch(e){ return; }
+  const box = document.getElementById('jobs');
+  if(!jobs.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div style="height:1px;background:var(--border);margin:20px 0"></div>' + jobs.slice(0,6).map(j => {
+    const d = j.video_id ? `output/${j.video_id}` : null;
     const links = j.status === 'done'
-      ? `<a href="${d}/slides.html" target="_blank">幻灯片</a><a href="api/jobs/${j.id}/doc" target="_blank">文档</a><a href="${d}/transcript.md" target="_blank">转写</a>`
-      : (j.error ? `错误：${j.error}` : '');
+      ? `<a href="${d}/slides.html" target="_blank">▶ 幻灯片</a> · <a href="${d}/doc.md" target="_blank">📄 文章</a> · <a href="${d}/transcript.md" target="_blank">转写</a>`
+      : (j.error ? `<span style="color:var(--danger)">${j.error}</span>` : '');
     return `<div class="job">
       <div class="jhead"><span class="badge s-${j.status}">${j.status}</span>
-        <a class="jurl" href="${j.url}" target="_blank">${j.url}</a>
-        <span style="font-size:12px;color:var(--muted)">${j.created} · ${j.doc_type}${j.theme && j.theme!=='auto' ? ' · '+j.theme : ''}</span></div>
+        <a href="${j.url}" target="_blank" style="font-size:13.5px;color:var(--fg)">${(j.title || j.url).slice(0,56)}</a>
+        <span style="font-size:12px;color:var(--faint)">${j.created} · ${j.doc_type}${j.theme && j.theme!=='auto' ? ' · '+j.theme : ''}</span></div>
       <div class="jmeta">${links}</div>
       <div class="steps">${(j.steps||[]).map(s => `+${s.t}s  ${s.msg}`).join('<br>')}</div>
     </div>`;

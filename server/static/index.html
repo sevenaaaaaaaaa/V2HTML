@@ -4,10 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>V2HTML · 视频 ⇄ HTML 双向内容引擎</title>
-<!--
-  前台 · 设计语言对齐 OpenFlow 前台（oklch tokens / Space Grotesk / 玻璃卡片 / blob 背景）
-  亮暗切换：右上角按钮（存 localStorage），跟随系统偏好初始化
--->
 <style>
 /* ═══════ OpenFlow tokens（前台版）═══════ */
 :root{
@@ -38,79 +34,124 @@
   --shadow:0 24px 60px -24px oklch(0% 0 0/.55);--shadow-sm:0 10px 28px -14px oklch(0% 0 0/.5);
 }
 *{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100vh;
   background-image:
     radial-gradient(560px 460px at 86% -6%,var(--blob-a),transparent 65%),
     radial-gradient(480px 420px at -4% 30%,var(--blob-b),transparent 62%),
     radial-gradient(520px 460px at 45% 108%,var(--blob-c),transparent 60%);
   background-attachment:fixed}
-.wrap{max-width:1060px;margin:0 auto;padding:56px 24px 80px}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px}
 a{color:var(--accent);text-decoration:none}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:52px}
-.brand{font-size:21px;font-weight:750;letter-spacing:.01em}
+/* ── 顶栏 ── */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:48px}
+.brand{font-size:21px;font-weight:750}
 .brand small{display:block;font-size:11.5px;color:var(--muted);letter-spacing:.2em;font-weight:500;margin-top:2px}
-.topbar .acts{display:flex;gap:10px;align-items:center}
+.acts{display:flex;gap:10px;align-items:center}
 .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--on-accent);
   border:none;border-radius:999px;padding:11px 22px;font-size:14.5px;font-weight:650;cursor:pointer;
   font-family:var(--font);transition:transform .3s var(--ease-spring),box-shadow .3s}
 .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
 .btn.ghost{background:var(--glass);color:var(--fg);border:1px solid var(--glass-border)}
 .btn.sm{padding:7px 14px;font-size:13px}
-.hero-center{text-align:center;margin-bottom:56px}
+/* ── hero ── */
+.hero-center{text-align:center;margin-bottom:40px}
 .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.28em;
   color:var(--accent-strong);font-weight:700;margin-bottom:18px}
 .kicker::before{content:"";width:26px;height:1.5px;background:var(--accent)}
-h1{font-size:clamp(30px,4.6vw,44px);line-height:1.22;letter-spacing:.005em;margin-bottom:16px}
+h1{font-size:clamp(30px,4.6vw,46px);line-height:1.22;margin-bottom:16px}
 h1 i{font-style:normal;color:var(--accent)}
-.lead{font-size:16px;color:var(--muted);max-width:640px;margin:0 auto 28px;line-height:1.75}
+.lead{font-size:16px;color:var(--muted);max-width:660px;margin:0 auto 26px;line-height:1.75}
 .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.trust{margin-top:18px;font-size:12.5px;color:var(--faint);display:flex;gap:8px;justify-content:center;align-items:center}
+.trust{margin-top:16px;font-size:12.5px;color:var(--faint);display:flex;gap:8px;justify-content:center;align-items:center}
 .trust .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+/* ── 数字带 ── */
+.band{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:52px}
+.band .b{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-md);
+  padding:16px 18px;text-align:center;backdrop-filter:blur(14px)}
+.band .n{font-size:30px;font-weight:800;background:linear-gradient(120deg,var(--accent),var(--accent-strong));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.band .l{font-size:12px;color:var(--muted);margin-top:3px}
+/* ── 区块通用 ── */
+section{margin-bottom:64px}
+.sec-head{margin-bottom:24px}
+.sec-head .k{font-size:12px;letter-spacing:.24em;color:var(--accent-strong);font-weight:700;margin-bottom:8px}
+.sec-head h2{font-size:clamp(22px,3vw,30px);line-height:1.3}
+.sec-head p{color:var(--muted);font-size:14.5px;margin-top:8px;line-height:1.7;max-width:720px}
 .panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-lg);
   padding:26px 28px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:var(--shadow);margin-bottom:26px}
-.panel h2{font-size:19px;margin-bottom:4px}
-.panel .ph{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.panel .ph .note{font-size:12.5px;color:var(--faint)}
+  box-shadow:var(--shadow)}
+/* ── 流程三步 ── */
+.steps3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.step{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-md);
+  padding:22px;position:relative;backdrop-filter:blur(12px)}
+.step .no{position:absolute;right:18px;top:14px;font-size:40px;font-weight:800;opacity:.1}
+.step h3{font-size:15.5px;margin-bottom:10px}
+.step p{font-size:13.5px;color:var(--muted);line-height:1.75}
+.step .art{margin-top:14px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.step .art img{width:100%;display:block}
+.step .art figcaption{font-size:11.5px;color:var(--faint);padding:6px 10px;background:var(--surface)}
+/* ── 主题画廊 ── */
+.gallery{display:grid;grid-template-columns:1.6fr 1fr;gap:22px;align-items:start}
+.gframe{border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);background:#000;
+  aspect-ratio:16/9;position:relative}
+.gframe iframe{width:1280px;height:720px;border:0;transform-origin:top left;position:absolute;top:0;left:0}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}
+.sw{border:1.5px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;
+  background:var(--surface-strong);transition:all .25s var(--ease-spring);font-family:var(--font)}
+.sw:hover{transform:translateY(-2px);border-color:var(--accent)}
+.sw.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sw .dot2{width:26px;height:26px;border-radius:8px;margin:0 auto 6px}
+.sw .nm{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:860px){.gallery{grid-template-columns:1fr}}
+/* ── 页型解剖 ── */
+.anat{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.anat figure{margin:0;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);
+  background:var(--surface-strong);transition:transform .35s var(--ease-spring),box-shadow .35s}
+.anat figure:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.anat img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
+.anat figcaption{padding:12px 15px;font-size:12.5px;line-height:1.6}
+.anat figcaption b{display:block;font-size:13.5px;margin-bottom:2px}
+.anat figcaption span{color:var(--muted)}
+/* ── 四文体卡 ── */
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.tcard{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-md);
+  padding:20px;backdrop-filter:blur(12px);transition:transform .3s var(--ease-spring)}
+.tcard:hover{transform:translateY(-3px)}
+.tcard .ic{font-size:24px}
+.tcard h3{font-size:15.5px;margin:10px 0 8px}
+.tcard p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px}
+.tcard .io{font-size:11.5px;color:var(--faint);font-family:var(--mono);line-height:1.7}
+.tcard .lnk{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:600}
+/* ── FAQ ── */
+.faq details{border-top:1px solid var(--border);padding:4px 2px}
+.faq details:first-of-type{border-top:none}
+.faq summary{cursor:pointer;padding:14px 2px;font-size:15px;font-weight:650;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq summary::after{content:"+";font-size:20px;color:var(--accent);font-weight:400;transition:transform .3s var(--ease-spring)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq .a{padding:0 2px 16px;font-size:14px;color:var(--muted);line-height:1.8;max-width:780px}
+.faq .a a{font-weight:600}
+/* ── 提交区 ── */
 .row{display:flex;gap:12px;flex-wrap:wrap}
 .row>*{flex:1;min-width:150px}
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em}
 input,select{width:100%;background:var(--surface-strong);border:1px solid var(--border);border-radius:12px;
-  color:var(--fg);padding:12px 14px;font-size:15px;outline:none;font-family:var(--font);
-  transition:border-color .25s}
+  color:var(--fg);padding:12px 14px;font-size:15px;outline:none;font-family:var(--font);transition:border-color .25s}
 input:focus,select:focus{border-color:var(--accent)}
 .hint{font-size:13px;color:var(--faint);margin-top:12px;line-height:1.7}
-.hint b{color:var(--warn)}
-.health{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:26px}
-.health b{color:var(--ok);font-weight:700}.health .no{color:var(--warn);font-weight:700}
-/* demo 卡片 */
-.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
-.demo{background:var(--surface-strong);border:1px solid var(--border);border-radius:var(--r-md);
-  overflow:hidden;transition:transform .35s var(--ease-spring),box-shadow .35s}
-.demo:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
-.demo .thumb{position:relative;display:block;aspect-ratio:16/9;overflow:hidden}
-.demo .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--ease-spring)}
-.demo:hover .thumb img{transform:scale(1.045)}
-.demo .tag{position:absolute;left:12px;top:12px;background:var(--accent);color:var(--on-accent);
-  font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.08em}
-.demo .pad{padding:14px 16px 16px}
-.demo .t{font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:5px}
-.demo .meta{font-size:12px;color:var(--muted);margin-bottom:11px}
-.demo .lnks{display:flex;gap:14px}
-.demo .lnks a{font-size:12.5px;font-weight:600}
-.demo .lnks a:hover{text-decoration:underline}
-/* 任务区 */
-.job{border-top:1px solid var(--border);padding:15px 0}
+.health{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:18px}
+.health b{color:var(--ok)}.health .no{color:var(--warn)}
+.job{border-top:1px solid var(--border);padding:13px 0}
 .job:first-child{border-top:none}
 .jhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.badge{display:inline-block;padding:2px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.badge{padding:2px 11px;border-radius:999px;font-size:12px;font-weight:700;display:inline-block}
 .s-queued{background:var(--hover)}.s-running{background:var(--accent-soft);color:var(--accent-strong)}
 .s-done{background:var(--ok-soft);color:var(--ok)}.s-error{background:var(--danger-soft);color:var(--danger)}
 .s-paused_no_llm{background:var(--warn-soft);color:var(--warn)}
-.jmeta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.8}
-.jmeta a{font-weight:600}
-.steps{font-size:12px;color:var(--faint);font-family:var(--mono);line-height:1.8;margin-top:7px}
-footer{margin-top:44px;text-align:center;font-size:12.5px;color:var(--faint);line-height:2}
+.jmeta{font-size:13px;color:var(--muted);margin-top:5px}
+.steps-mini{font-size:11.5px;color:var(--faint);font-family:var(--mono);line-height:1.7;margin-top:5px}
+footer{margin-top:56px;text-align:center;font-size:12.5px;color:var(--faint);line-height:2}
 </style>
 </head>
 <body>
@@ -119,7 +160,7 @@ footer{margin-top:44px;text-align:center;font-size:12.5px;color:var(--faint);lin
   <div class="topbar">
     <div class="brand">V2HTML<small>视频 ⇄ 内容引擎</small></div>
     <div class="acts">
-      <button class="btn ghost sm" id="tbtn" title="切换亮暗">🌗 主题</button>
+      <button class="btn ghost sm" id="tbtn">🌗 主题</button>
       <a class="btn ghost sm" href="admin/login" target="_blank">⚙ 管理</a>
     </div>
   </div>
@@ -127,73 +168,182 @@ footer{margin-top:44px;text-align:center;font-size:12.5px;color:var(--faint);lin
   <div class="hero-center">
     <span class="kicker">V2HTML · 视频转内容引擎</span>
     <h1>看完一条视频，<br>得到<i>一堆可上线的内容</i></h1>
-    <p class="lead">提交一条 YouTube 链接：自动抓取素材（字幕 · 转写 · 关键帧）→ LLM 按文体方法论重组 → 产出可直接发布的文章与重新设计的可放映幻灯片。</p>
+    <p class="lead">一条 YouTube 链接进来：脚本抓素材、LLM 按文体方法论重写——产出的不是字幕流水账，而是结构化重写的文章与重新设计的可放映幻灯片。</p>
     <div class="cta-row">
-      <a class="btn" href="#submit">开始转换一条视频</a>
-      <a class="btn ghost" href="#demos">先看示例作品</a>
+      <a class="btn" href="#submit">开始转换</a>
+      <a class="btn ghost" href="#demos">看示例作品</a>
     </div>
-    <div class="trust"><span class="dot"></span>四类文体自动判定 · 30 套幻灯片主题 · 产物离线可用</div>
+    <div class="trust"><span class="dot"></span>全部演示均由本系统真实生成 · 无任何手工排版</div>
   </div>
 
-  <div class="health" id="health"></div>
+  <!-- 数字带 -->
+  <div class="band">
+    <div class="b"><div class="n">4</div><div class="l">文体自动判定</div></div>
+    <div class="b"><div class="n">30</div><div class="l">幻灯片主题</div></div>
+    <div class="b"><div class="n">10</div><div class="l">内置页型组件</div></div>
+    <div class="b"><div class="n">~2<span style="font-size:16px"> 分钟</span></div><div class="l">一条视频的转换耗时</div></div>
+    <div class="b"><div class="n">13,002</div><div class="l">demo 中被讲解的参数个数</div></div>
+  </div>
 
-  <!-- ═══════ 示例作品 ═══════ -->
-  <div class="panel" id="demos">
-    <div class="ph">
+  <!-- 流程三步 -->
+  <section id="how">
+    <div class="sec-head">
+      <div class="k">HOW IT WORKS</div>
+      <h2>三步：从链接到可发布的内容</h2>
+      <p>确定性工作（下载、字幕、抽帧）交给脚本保证可复现；语义工作（判定文体、重组结构、写作、设计幻灯片）交给 LLM 按沉淀的方法论执行。</p>
+    </div>
+    <div class="steps3">
+      <div class="step"><div class="no">01</div>
+        <h3>📥 抓取素材</h3>
+        <p>yt-dlp 拉取视频与字幕（人工字幕优先，ASR 滚动字幕自动去重），ffmpeg 按场景切变抽取关键帧并生成联览图。</p>
+        <figure class="art"><img src="demos/demo-tutorial.png" alt="素材"><figcaption>帧 + 联览图 + 结构化转写稿</figcaption></figure>
+      </div>
+      <div class="step"><div class="no">02</div>
+        <h3>🧠 语义重组</h3>
+        <p>LLM 通读转写稿判定文体，按对应方法论重写：教程补验证点与避坑清单、科普分层递进、评论做论据分级、评测评分卡前置。</p>
+        <figure class="art"><img src="demos/demo-commentary.png" alt="重组"><figcaption>论点拆解 + 可信度记分板（评论体）</figcaption></figure>
+      </div>
+      <div class="step"><div class="no">03</div>
+        <h3>📦 产出上线</h3>
+        <p>同时产出 doc.md 与可放映幻灯片（嵌入含独有信息的原视频帧、每页标注时间戳），可选自动推送到 openflow 文章库。</p>
+        <figure class="art"><img src="demos/demo-science.png" alt="产出"><figcaption>文章 + 30 主题幻灯片，离线可用</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主题画廊（iframe 实时切换） -->
+  <section id="themes">
+    <div class="sec-head">
+      <div class="k">30 THEMES · LIVE</div>
+      <h2>同一页内容，30 种设计风格</h2>
+      <p>下面不是截图墙——右侧每一格都是真实主题，点一下，左边的真实幻灯片立刻换装。放映中按 T 键同样可切。</p>
+    </div>
+    <div class="panel">
+      <div class="gallery">
+        <div class="gframe"><iframe id="gframe" src="output/aircAruvnKk/slides.html?theme=science&amp;shot=5" scrolling="no"></iframe></div>
+        <div class="swatches" id="swatches"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页型解剖 -->
+  <section id="anatomy">
+    <div class="sec-head">
+      <div class="k">NOT A SCREENSHOT DUMP</div>
+      <h2>「重构」到底长什么样</h2>
+      <p>幻灯片跟随论证结构而非视频时间轴：每页一个论断句标题，用引擎内置的 10 种页型承载不同信息，仅嵌入含独有信息的原视频帧。</p>
+    </div>
+    <div class="anat">
+      <figure><img src="demos/anatomy-columns.png" alt="对比页" loading="lazy"><figcaption><b>对比页</b><span>「大脑 vs 程序」双栏卡片，钩子用冲突开场</span></figcaption></figure>
+      <figure><img src="demos/anatomy-flow.png" alt="流程页" loading="lazy"><figcaption><b>流程页</b><span>「像素→短边→部件→数字」逐层组装的机制可视化</span></figcaption></figure>
+      <figure><img src="demos/anatomy-quote.png" alt="引用页" loading="lazy"><figcaption><b>引用页</b><span>核心机制一句话大字引用，带原视频时间戳</span></figcaption></figure>
+      <figure><img src="demos/anatomy-stats.png" alt="数据卡页" loading="lazy"><figcaption><b>数据卡页</b><span>Docker 构建提速 39×：数字用数据卡承载</span></figcaption></figure>
+    </div>
+  </section>
+
+  <!-- 四文体 -->
+  <section id="types">
+    <div class="sec-head">
+      <div class="k">FOUR GENRES</div>
+      <h2>视频是什么，就写成什么</h2>
+      <p>系统通读转写稿自动判定文体（也可以手动指定），四类内容各有专门的方法论与验收标准。</p>
+    </div>
+    <div class="types">
+      <div class="tcard"><div class="ic">🛠️</div><h3>教程类 → 教程文档</h3>
+        <p>命令逐字核对、每步给验证点、避坑清单、完成自验清单。不看视频也能复现。</p>
+        <div class="io">in: 屏幕录制 + 操作序列<br>out: 可复现步骤 + 验证点</div>
+        <a class="lnk" href="output/DQdB7wFEygo/doc.md" target="_blank">看 Docker 教程成品 →</a></div>
+      <div class="tcard"><div class="ic">🔬</div><h3>科普类 → 科普文章</h3>
+        <p>直觉 → 机制 → 边界三层递进，类比标注失效边界，术语首现给白话解释，附误解 FAQ。</p>
+        <div class="io">in: 概念讲解 + 图解动画<br>out: 分层文章 + 知识坐标</div>
+        <a class="lnk" href="output/aircAruvnKk/doc.md" target="_blank">看神经网络成品 →</a></div>
+      <div class="tcard"><div class="ic">🎙️</div><h3>口播评论 → 评论文章</h3>
+        <p>论点逐条拆解，论据三档标注（✅可验证 / ⚠️存疑 / ❌别当真），作者立场与写作者立场分离。</p>
+        <div class="io">in: 观点论证 + 数据引用<br>out: 论点地图 + 证据记分板</div>
+        <a class="lnk" href="output/0pgCBV8CTZY/doc.md" target="_blank">看 Fireship 成品 →</a></div>
+      <div class="tcard"><div class="ic">📱</div><h3>评测访谈 → 结论前置体</h3>
+        <p>评分卡放最前，逐维度展开证据，收尾「适合谁 / 不适合谁」。访谈则按议题分组纪要。</p>
+        <div class="io">in: 评测/对谈内容<br>out: 评分卡 + 维度展开</div>
+        <a class="lnk" href="output/D4QyStJWgCc/doc.md" target="_blank">看 MKBHD 成品 →</a></div>
+    </div>
+  </section>
+
+  <!-- 示例作品 -->
+  <section id="demos">
+    <div class="sec-head">
+      <div class="k">SHOWCASE</div>
       <h2>示例作品</h2>
-      <span class="note">以下全部由本系统自动生成 · 幻灯片内可按 T 键切换 30 主题</span>
+      <p>四条真实视频的完整产出。每套都含文章与幻灯片，幻灯片内可切 30 主题。</p>
     </div>
-    <div class="demo-grid">
-      <div class="demo"><a class="thumb" href="output/aircAruvnKk/slides.html" target="_blank"><img src="demos/demo-science.png" alt="科普"><span class="tag">科普</span></a>
-        <div class="pad"><div class="t">神经网络是怎么「看见」一个 3 的？</div>
-        <div class="meta">3Blue1Brown · science 主题 · 14 页</div>
-        <div class="lnks"><a href="output/aircAruvnKk/slides.html" target="_blank">▶ 幻灯片</a><a href="output/aircAruvnKk/doc.md" target="_blank">📄 文章</a></div></div></div>
-      <div class="demo"><a class="thumb" href="output/0pgCBV8CTZY/slides.html" target="_blank"><img src="demos/demo-commentary.png" alt="评论"><span class="tag">评论</span></a>
-        <div class="pad"><div class="t">Anthropic 是真恐慌，还是 IPO 前的定价表演？</div>
-        <div class="meta">Fireship · commentary 主题 · 10 页</div>
-        <div class="lnks"><a href="output/0pgCBV8CTZY/slides.html" target="_blank">▶ 幻灯片</a><a href="output/0pgCBV8CTZY/doc.md" target="_blank">📄 文章</a></div></div></div>
-      <div class="demo"><a class="thumb" href="output/DQdB7wFEygo/slides.html" target="_blank"><img src="demos/demo-tutorial.png" alt="教程"><span class="tag">教程</span></a>
-        <div class="pad"><div class="t">Docker 上手：把 Node 应用装进容器</div>
-        <div class="meta">The Coding Sloth · tutorial 主题 · 12 页</div>
-        <div class="lnks"><a href="output/DQdB7wFEygo/slides.html" target="_blank">▶ 幻灯片</a><a href="output/DQdB7wFEygo/doc.md" target="_blank">📄 文章</a></div></div></div>
-      <div class="demo"><a class="thumb" href="output/D4QyStJWgCc/slides.html" target="_blank"><img src="demos/demo-review.png" alt="评测"><span class="tag">评测</span></a>
-        <div class="pad"><div class="t">Nothing Phone 4A / Pro 评测</div>
-        <div class="meta">MKBHD · geist 主题 · 10 页</div>
-        <div class="lnks"><a href="output/D4QyStJWgCc/slides.html" target="_blank">▶ 幻灯片</a><a href="output/D4QyStJWgCc/doc.md" target="_blank">📄 文章</a></div></div></div>
+    <div class="demo-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px">
+      <div class="demo" style="background:var(--surface-strong);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">
+        <a class="thumb" style="position:relative;display:block;aspect-ratio:16/9;overflow:hidden" href="output/aircAruvnKk/slides.html" target="_blank"><img src="demos/demo-science.png" style="width:100%;height:100%;object-fit:cover;display:block" alt="科普"><span style="position:absolute;left:12px;top:12px;background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px">科普</span></a>
+        <div style="padding:14px 16px 16px"><div style="font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:5px">神经网络是怎么「看见」一个 3 的？</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:11px">3Blue1Brown · science · 14 页</div>
+        <div style="display:flex;gap:14px;font-size:12.5px"><a href="output/aircAruvnKk/slides.html" target="_blank">▶ 幻灯片</a><a href="output/aircAruvnKk/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo" style="background:var(--surface-strong);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">
+        <a class="thumb" style="position:relative;display:block;aspect-ratio:16/9;overflow:hidden" href="output/0pgCBV8CTZY/slides.html" target="_blank"><img src="demos/demo-commentary.png" style="width:100%;height:100%;object-fit:cover;display:block" alt="评论"><span style="position:absolute;left:12px;top:12px;background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px">评论</span></a>
+        <div style="padding:14px 16px 16px"><div style="font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:5px">Anthropic 是真恐慌，还是 IPO 前的定价表演？</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:11px">Fireship · commentary · 10 页</div>
+        <div style="display:flex;gap:14px;font-size:12.5px"><a href="output/0pgCBV8CTZY/slides.html" target="_blank">▶ 幻灯片</a><a href="output/0pgCBV8CTZY/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo" style="background:var(--surface-strong);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">
+        <a class="thumb" style="position:relative;display:block;aspect-ratio:16/9;overflow:hidden" href="output/DQdB7wFEygo/slides.html" target="_blank"><img src="demos/demo-tutorial.png" style="width:100%;height:100%;object-fit:cover;display:block" alt="教程"><span style="position:absolute;left:12px;top:12px;background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px">教程</span></a>
+        <div style="padding:14px 16px 16px"><div style="font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:5px">Docker 上手：把 Node 应用装进容器</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:11px">The Coding Sloth · tutorial · 12 页</div>
+        <div style="display:flex;gap:14px;font-size:12.5px"><a href="output/DQdB7wFEygo/slides.html" target="_blank">▶ 幻灯片</a><a href="output/DQdB7wFEygo/doc.md" target="_blank">📄 文章</a></div></div></div>
+      <div class="demo" style="background:var(--surface-strong);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">
+        <a class="thumb" style="position:relative;display:block;aspect-ratio:16/9;overflow:hidden" href="output/D4QyStJWgCc/slides.html" target="_blank"><img src="demos/demo-review.png" style="width:100%;height:100%;object-fit:cover;display:block" alt="评测"><span style="position:absolute;left:12px;top:12px;background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px">评测</span></a>
+        <div style="padding:14px 16px 16px"><div style="font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:5px">Nothing Phone 4A / Pro 评测</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:11px">MKBHD · geist · 10 页</div>
+        <div style="display:flex;gap:14px;font-size:12.5px"><a href="output/D4QyStJWgCc/slides.html" target="_blank">▶ 幻灯片</a><a href="output/D4QyStJWgCc/doc.md" target="_blank">📄 文章</a></div></div></div>
     </div>
-  </div>
+  </section>
 
-  <!-- ═══════ 提交任务 ═══════ -->
-  <div class="panel" id="submit">
-    <div class="ph"><h2>转换一条视频</h2><span class="note">约 2 分钟 · 产出文章 + 可放映幻灯片</span></div>
+  <!-- FAQ -->
+  <section id="faq" class="panel faq">
+    <div class="sec-head" style="margin-bottom:10px">
+      <div class="k">FAQ</div>
+      <h2>常见问题</h2>
+    </div>
+    <details open><summary>产出的内容质量怎么保证？会不会一本正经胡说八道？</summary>
+      <div class="a">方法论里写死了防幻觉规则：数字与命令必须对照转写稿原文与视频帧逐字核对；视频没讲清但流程必需的内容用「💡 补全」显式标注；观点归属严格分离（视频作者的归作者，补充的署名写作者）。你可以对比<a href="output/aircAruvnKk/doc.md" target="_blank">科普成品</a>里的标注体系。</div></details>
+    <details><summary>幻灯片和视频截图 PPT 有什么区别？</summary>
+      <div class="a">截图拼贴是时间的碎片；V2HTML 的幻灯片是论证的空间化——标题写论断句、每页一个论点、10 种页型承载不同信息类型、只嵌入含独有信息的原视频帧（图表/界面/实物）。上面<a href="#anatomy">「重构长什么样」</a>一节有实物对照。</div></details>
+    <details><summary>支持哪些视频源？多长的视频合适？</summary>
+      <div class="a">任何 yt-dlp 支持的源（YouTube、B 站等），有人工字幕的源效果最佳，无字幕视频可装本地 Whisper 兜底。5–20 分钟的信息型视频是甜点区；纯娱乐视频会按「其他」文体产出短摘要。</div></details>
+    <details><summary>生成的内容可以直接发布吗？版权怎么办？</summary>
+      <div class="a">产出默认推为草稿，由你审校后发布。重建内容是对原视频的重组解读，页脚始终保留原视频署名与链接；批量商用前请确认对原内容的授权。系统每页幻灯片都标注原视频时间戳，方便回溯核对。</div></details>
+    <details><summary>一定要用它吗？我可以自己拿提示词去用</summary>
+      <div class="a">方法论提示词（prompts/ 目录）和 30 主题引擎都是开源的，你可以只用碎片；服务端的价值在于把「抓取→转写→判定→写作→编排→推送」串成一条无人值守的流水线。</div></details>
+  </section>
+
+  <!-- 提交 -->
+  <section id="submit" class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+      <h2 style="font-size:19px">转换一条视频</h2>
+      <span style="font-size:12.5px;color:var(--faint)">约 2 分钟 · 产出文章 + 可放映幻灯片</span>
+    </div>
+    <div class="health" id="health"></div>
     <div class="row">
       <div style="flex:3;min-width:260px">
         <label>视频链接（YouTube 等）</label>
         <input id="url" placeholder="https://www.youtube.com/watch?v=xxxx">
       </div>
-      <div>
-        <label>文体</label>
+      <div><label>文体</label>
         <select id="doc_type">
           <option value="auto">自动判定</option><option value="tutorial">教程</option>
           <option value="science">科普</option><option value="commentary">评论</option>
           <option value="other">其他</option>
-        </select>
-      </div>
-      <div>
-        <label>幻灯片主题</label>
-        <select id="theme"><option value="auto">跟随文体</option></select>
-      </div>
-      <div style="max-width:104px">
-        <label>帧数</label>
-        <input id="max_frames" type="number" value="24" min="8" max="48">
-      </div>
-      <div style="flex:0;display:flex;align-items:flex-end">
-        <button class="btn" id="go">生成</button>
-      </div>
+        </select></div>
+      <div><label>幻灯片主题</label>
+        <select id="theme"><option value="auto">跟随文体</option></select></div>
+      <div style="max-width:104px"><label>帧数</label>
+        <input id="max_frames" type="number" value="24" min="8" max="48"></div>
+      <div style="flex:0;display:flex;align-items:flex-end"><button class="btn" id="go">生成</button></div>
     </div>
     <p class="hint" id="formhint"></p>
     <div id="jobs"></div>
-  </div>
+  </section>
 
   <footer>
     V2HTML — 脚本管确定性 · LLM 管语义 · <a href="https://github.com/sevenaaaaaaaaa/V2HTML" target="_blank">GitHub 开源</a><br>
@@ -202,11 +352,40 @@ footer{margin-top:44px;text-align:center;font-size:12.5px;color:var(--faint);lin
 </div>
 
 <script>
-const THEMES = ["science","tutorial","commentary","terracotta","paper-doc","prism","aurora","glass","memphis","vapor","riso","broadsheet","luxe","academia","y2k","blueprint","pop","zen","swiss","bauhaus","deco","brutal","kraft","neon","geist","carbon","ant","tdesign","arco","material3"];
-const themeSel = document.getElementById('theme');
-THEMES.forEach(t => { const o = document.createElement('option'); o.value = o.textContent = t; themeSel.appendChild(o); });
+const THEMES = [
+ ["science","#8b7cf6"],["tutorial","#3b82f6"],["commentary","#c2452d"],["terracotta","#c96442"],
+ ["paper-doc","#2383e2"],["prism","#8b5cf6"],["aurora","#8a7ff0"],["glass","#6a5cff"],
+ ["memphis","#e8452e"],["vapor","#ff2d95"],["riso","#ff48b0"],["broadsheet","#8c1c13"],
+ ["luxe","#a9852e"],["academia","#d08a4e"],["y2k","#8a5cff"],["blueprint","#9fd0ff"],
+ ["pop","#e4002b"],["zen","#4a5d54"],["swiss","#e63946"],["bauhaus","#d7301f"],
+ ["deco","#c9a227"],["brutal","#e8590c"],["kraft","#b3541e"],["neon","#00e5ff"],
+ ["geist","#0070f3"],["carbon","#0f62fe"],["ant","#1677ff"],["tdesign","#0052d9"],
+ ["arco","#165dff"],["material3","#6750a4"]];
+/* 主题色卡 + iframe 实时切换 */
+const swBox = document.getElementById('swatches');
+const frame = document.getElementById('gframe');
+THEMES.forEach(([name, color], i) => {
+  const el = document.createElement('div');
+  el.className = 'sw' + (i === 0 ? ' on' : '');
+  el.innerHTML = `<div class="dot2" style="background:${color}"></div><div class="nm">${name}</div>`;
+  el.onclick = () => {
+    document.querySelectorAll('.sw').forEach(x => x.classList.remove('on'));
+    el.classList.add('on');
+    frame.src = `output/aircAruvnKk/slides.html?theme=${name}&shot=5&cb=${Date.now()}`;
+  };
+  swBox.appendChild(el);
+});
+/* iframe 16:9 缩放 */
+function fitFrame(){
+  const f = document.querySelector('.gframe');
+  if(!f) return;
+  const fr = f.querySelector('iframe');
+  fr.style.transform = `scale(${f.clientWidth / 1280})`;
+  fr.style.width = '1280px';
+}
+addEventListener('resize', fitFrame);
 
-/* ── 亮暗切换（对齐 openflow 的 data-theme 机制）── */
+/* 亮暗切换 */
 const saved = localStorage.getItem('v2h-ui-theme');
 if (saved) document.documentElement.dataset.theme = saved;
 else if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
@@ -216,38 +395,39 @@ document.getElementById('tbtn').onclick = () => {
   localStorage.setItem('v2h-ui-theme', nx);
 };
 
+/* 表单与任务 */
+const themeSel = document.getElementById('theme');
+THEMES.forEach(([t]) => { const o = document.createElement('option'); o.value = o.textContent = t; themeSel.appendChild(o); });
+
 async function health(){
   try{
     const h = await (await fetch('api/health')).json();
     document.getElementById('health').innerHTML =
       `<span>LLM：<b>${h.llm_configured ? '已配置 · ' + h.llm_model : '<span class="no">未配置</span>'}</b></span>` +
-      `<span>代理：${h.proxy ? '已检测' : '直连'}</span>` +
-      `<span>推送 openflow：${h.push_enabled ? '<b>开启 · ' + h.push_status + '</b>' : '关闭'}</span>` +
+      `<span>推送 openflow：${h.push_enabled ? '<b>开启</b>' : '关闭'}</span>` +
       `<span>主题库：${h.themes} 套</span>`;
     document.getElementById('formhint').innerHTML = h.llm_configured ? '' :
-      '当前未配置 LLM API Key：任务会在素材就绪后暂停，去 <a href="admin/config/" target="_blank">管理后台</a> 配置后重试即可。';
-  }catch(e){ document.getElementById('health').textContent = '服务连接失败'; }
+      '当前未配置 LLM Key：任务会在素材就绪后暂停，去 <a href="admin/config/" target="_blank">管理后台</a> 配置后重试。';
+  }catch(e){}
 }
-
 async function refresh(){
   let jobs; try{ jobs = await (await fetch('api/jobs')).json(); }catch(e){ return; }
   const box = document.getElementById('jobs');
   if(!jobs.length){ box.innerHTML = ''; return; }
-  box.innerHTML = '<div style="height:1px;background:var(--border);margin:20px 0"></div>' + jobs.slice(0,6).map(j => {
+  box.innerHTML = '<div style="height:1px;background:var(--border);margin:18px 0"></div>' + jobs.slice(0,5).map(j => {
     const d = j.video_id ? `output/${j.video_id}` : null;
     const links = j.status === 'done'
-      ? `<a href="${d}/slides.html" target="_blank">▶ 幻灯片</a> · <a href="${d}/doc.md" target="_blank">📄 文章</a> · <a href="${d}/transcript.md" target="_blank">转写</a>`
+      ? `<a href="${d}/slides.html" target="_blank">▶ 幻灯片</a> · <a href="${d}/doc.md" target="_blank">📄 文章</a>`
       : (j.error ? `<span style="color:var(--danger)">${j.error}</span>` : '');
     return `<div class="job">
       <div class="jhead"><span class="badge s-${j.status}">${j.status}</span>
-        <a href="${j.url}" target="_blank" style="font-size:13.5px;color:var(--fg)">${(j.title || j.url).slice(0,56)}</a>
-        <span style="font-size:12px;color:var(--faint)">${j.created} · ${j.doc_type}${j.theme && j.theme!=='auto' ? ' · '+j.theme : ''}</span></div>
+        <span style="font-size:13.5px">${(j.title || j.url).slice(0,52)}</span>
+        <span style="font-size:12px;color:var(--faint)">${j.created} · ${j.doc_type}</span></div>
       <div class="jmeta">${links}</div>
-      <div class="steps">${(j.steps||[]).map(s => `+${s.t}s  ${s.msg}`).join('<br>')}</div>
+      <div class="steps-mini">${(j.steps||[]).map(s => `+${s.t}s ${s.msg}`).join(' · ')}</div>
     </div>`;
   }).join('');
 }
-
 document.getElementById('go').onclick = async function(){
   this.disabled = true;
   try{
@@ -261,8 +441,7 @@ document.getElementById('go').onclick = async function(){
     else { document.getElementById('url').value = ''; refresh(); }
   } finally { this.disabled = false; }
 };
-
-health(); refresh(); setInterval(refresh, 2500);
+fitFrame(); health(); refresh(); setInterval(refresh, 2500);
 </script>
 </body>
 </html>

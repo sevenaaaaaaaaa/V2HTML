@@ -13,10 +13,11 @@ systemctl is-active v2html
 python3 - <<'PY'
 import json, pathlib
 p = pathlib.Path('/www/wwwroot/V2HTML/server-data/config.json')
-c = json.loads(p.read_text())
+# 服务器系统 Python 3.6 默认 ascii，必须显式 utf-8
+c = json.loads(p.read_text(encoding='utf-8'))
 if c.get('push', {}).get('author') == 'V2HTML 引擎':
     c['push']['author'] = 'ConFlow 引擎'
-    p.write_text(json.dumps(c, ensure_ascii=False, indent=1))
+    p.write_text(json.dumps(c, ensure_ascii=False, indent=1), encoding='utf-8')
     print('config author -> ConFlow 引擎')
 else:
     print('config author:', c.get('push', {}).get('author'))

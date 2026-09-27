@@ -1,4 +1,4 @@
-"""V2HTML 服务端 · LLM 客户端（配置热读：server-data/config.json 优先）。"""
+"""ConFlow 服务端 · LLM 客户端（配置热读：server-data/config.json 优先）。"""
 from __future__ import annotations
 
 import base64

@@ -1,4 +1,4 @@
-"""V2HTML 服务端 · 配置与凭据存储。
+"""ConFlow 服务端 · 配置与凭据存储。
 
 优先级：server-data/config.json > 环境变量 > 内置默认。
 server-data/ 不进代码库（含密钥哈希与 LLM key）。
@@ -26,7 +26,7 @@ DEFAULTS: dict = {
         "enabled": True,          # 任务完成后自动推送到 openflow
         "status": "draft",        # draft（进 openflow 后台待发）| published（直接上线）
         "category": "ai-create",
-        "author": "V2HTML 引擎",
+        "author": "ConFlow 引擎",
         "openflow_data": "/www/wwwroot/nownexts_com/data",
     },
     "admin": {},                  # {"username":…, "salt":…, "hash":…}
@@ -53,16 +53,21 @@ def load() -> dict:
         except Exception:
             pass
     # 环境变量兜底（首次部署未写 config 时仍能用 .env 跑起来）
+    # 项目由 V2HTML 改名 ConFlow：CONFLOW_* 为准，旧 V2HTML_* 仍可读，线上旧 .env 不失效
     env_map = {
-        ("llm", "base_url"): "V2HTML_LLM_BASE_URL",
-        ("llm", "api_key"): "V2HTML_LLM_API_KEY",
-        ("llm", "model"): "V2HTML_LLM_MODEL",
-        ("llm", "max_tokens"): "V2HTML_LLM_MAX_TOKENS",
-        ("push", "openflow_data"): "V2HTML_OPENFLOW_DATA",
+        ("llm", "base_url"): ("CONFLOW_LLM_BASE_URL", "V2HTML_LLM_BASE_URL"),
+        ("llm", "api_key"): ("CONFLOW_LLM_API_KEY", "V2HTML_LLM_API_KEY"),
+        ("llm", "model"): ("CONFLOW_LLM_MODEL", "V2HTML_LLM_MODEL"),
+        ("llm", "max_tokens"): ("CONFLOW_LLM_MAX_TOKENS", "V2HTML_LLM_MAX_TOKENS"),
+        ("push", "openflow_data"): ("CONFLOW_OPENFLOW_DATA", "V2HTML_OPENFLOW_DATA"),
     }
-    for (sec, key), var in env_map.items():
-        if not cfg[sec].get(key) and os.environ.get(var):
-            cfg[sec][key] = os.environ[var]
+    for (sec, key), cands in env_map.items():
+        if cfg[sec].get(key):
+            continue
+        for var in cands:
+            if os.environ.get(var):
+                cfg[sec][key] = os.environ[var]
+                break
     if cfg["llm"].get("max_tokens") in (None, "", "None"):
         cfg["llm"]["max_tokens"] = 8192
     return cfg

@@ -1,4 +1,4 @@
-"""V2HTML 服务端 · FastAPI 应用（前台 API + 管理后台）。
+"""ConFlow 服务端 · FastAPI 应用（前台 API + 管理后台）。
 
   启动:  uvicorn server.app:app --host 127.0.0.1 --port 8410
   前台:  /                       提交页
@@ -38,7 +38,7 @@ from server.admin import router as admin_router  # noqa: E402
 OUT = ROOT / "output"
 OUT.mkdir(exist_ok=True)
 
-app = FastAPI(title="V2HTML Server", version="0.2.0", redirect_slashes=False)
+app = FastAPI(title="ConFlow Server", version="0.2.0", redirect_slashes=False)
 app.include_router(admin_router)
 
 
@@ -50,7 +50,8 @@ async def no_cache_middleware(request, call_next):
     return resp
 
 
-EXEC = ThreadPoolExecutor(max_workers=int(os.environ.get("V2HTML_WORKERS", "1")))
+EXEC = ThreadPoolExecutor(max_workers=int(
+    os.environ.get("CONFLOW_WORKERS") or os.environ.get("V2HTML_WORKERS") or "1"))
 JOBS: dict[str, dict] = {}
 LOCK = threading.Lock()
 
@@ -65,16 +66,21 @@ def _log(job: dict, msg: str) -> None:
     job["steps"].append({"t": round(time.time() - job["t0"], 1), "msg": msg})
 
 
+def _api_token() -> str:
+    """改名 ConFlow 后保留旧 V2HTML_TOKEN 读取，线上 systemd 环境不失效。"""
+    return os.environ.get("CONFLOW_TOKEN") or os.environ.get("V2HTML_TOKEN", "")
+
+
 def _authed(request: Request, authorization: str) -> bool:
     """会话 Cookie（后台）或 Bearer Token（外部调用）任一通过即可。"""
     if auth.check_session(request.cookies.get("v2h_session")):
         return True
-    token = os.environ.get("V2HTML_TOKEN", "")
+    token = _api_token()
     return bool(token) and authorization == f"Bearer {token}"
 
 
 def _require(request: Request, authorization: str) -> None:
-    token = os.environ.get("V2HTML_TOKEN", "")
+    token = _api_token()
     if not _authed(request, authorization) and token:
         raise HTTPException(401, "需要登录或 Bearer Token")
 
@@ -298,7 +304,7 @@ async def api_config_set(section: str, body: dict, request: Request,
 @app.get("/api/health")
 def health():
     cfg = store.load()
-    return {**llm.info(), "proxy": v2h.detect_proxy(), "auth": bool(os.environ.get("V2HTML_TOKEN")),
+    return {**llm.info(), "proxy": v2h.detect_proxy(), "auth": bool(_api_token()),
             "push_enabled": bool(cfg["push"].get("enabled")),
             "push_status": cfg["push"].get("status"),
             "output": str(OUT), "themes": len(THEMES)}

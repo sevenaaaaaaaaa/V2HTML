@@ -7,7 +7,7 @@ metadata:
     project: /Users/sevenaaaaaaa/V2HTML
 ---
 
-# V2HTML：视频 → 文档 + 幻灯片
+# ConFlow：视频 → 文档 + 幻灯片
 
 把一条视频变成「可读性、实用性、逻辑性」都过关的文章与一套**重构型** HTML 幻灯片（不是截图拼贴）。项目根目录：`/Users/sevenaaaaaaa/V2HTML`。
 

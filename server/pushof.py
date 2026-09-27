@@ -1,4 +1,4 @@
-"""V2HTML 服务端 · 把生成的文章推送进 openflow（data/articles/index.json）。
+"""ConFlow 服务端 · 把生成的文章推送进 openflow（data/articles/index.json）。
 
 - doc.md → HTML（markdown 库转换），头部附来源视频与幻灯片链接
 - 幂等：同 video_id 再次推送为覆盖更新
@@ -17,7 +17,8 @@ import markdown as md_lib
 
 from . import store
 
-SLIDE_BASE = os.environ.get("V2HTML_PUBLIC_BASE", "/VTH")  # 本站 slides 的对外前缀
+SLIDE_BASE = (os.environ.get("CONFLOW_PUBLIC_BASE")
+              or os.environ.get("V2HTML_PUBLIC_BASE") or "/VTH")  # 本站 slides 的对外前缀
 
 
 def _md2html(doc_md: str) -> str:
@@ -42,9 +43,9 @@ def push(workdir: pathlib.Path, meta: dict, doc_md: str) -> dict:
     slide_url = f"{SLIDE_BASE}/output/{vid}/slides.html"
     video_url = meta.get("url") or ""
     header = (
-        f'<div class="v2html-source" style="font-size:14px;opacity:.75;'
+        f'<div class="conflow-source" style="font-size:14px;opacity:.75;'
         f'border-left:3px solid #888;padding:6px 12px;margin-bottom:20px">'
-        f'本文由 V2HTML 从视频重建：'
+        f'本文由 ConFlow 从视频重建：'
         f'<a href="{video_url}" target="_blank">{meta.get("title", vid)}</a>'
         f'（{meta.get("uploader", "")}）· '
         f'<a href="{slide_url}" target="_blank">配套幻灯片（可放映）</a></div>'
@@ -63,16 +64,16 @@ def push(workdir: pathlib.Path, meta: dict, doc_md: str) -> dict:
 
     now = time.strftime("%Y-%m-%d %H:%M:%S")
     entry = {
-        "id": f"v2html_{vid}",
+        "id": f"conflow_{vid}",
         "title": (meta.get("title") or vid)[:120],
-        "slug": f"v2html-{vid.lower()}",
+        "slug": f"conflow-{vid.lower()}",
         "content": content,
         "excerpt": _excerpt(content),
         "status": cfg.get("status", "draft"),
-        "author": cfg.get("author", "V2HTML 引擎"),
+        "author": cfg.get("author", "ConFlow 引擎"),
         "category": cat,
-        "tags": ["V2HTML", "视频重构", meta.get("uploader") or "视频"],
-        "source": "v2html",
+        "tags": ["ConFlow", "视频重构", meta.get("uploader") or "视频"],
+        "source": "conflow",
         "created_at": now,
         "updated_at": now,
         "seo_title": (meta.get("title") or vid)[:120],
@@ -90,7 +91,9 @@ def push(workdir: pathlib.Path, meta: dict, doc_md: str) -> dict:
         old.unlink(missing_ok=True)
 
     articles = json.loads(index_path.read_text(encoding="utf-8"))
-    articles = [a for a in articles if a.get("id") != entry["id"]]
+    # 幂等覆盖：改名前的旧 id（v2html_<vid>）也一并移除，避免重复条目
+    articles = [a for a in articles
+                if a.get("id") not in (entry["id"], f"v2html_{vid}")]
     articles.insert(0, entry)
     tmp = index_path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(articles, ensure_ascii=False), encoding="utf-8")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""V2HTML CLI — YouTube 视频素材管线（确定性部分）。
+"""ConFlow CLI — YouTube 视频素材管线（确定性部分）。
 
 用法:
   python3 bin/v2h.py fetch <url> [--max-frames 24] [--no-frames]
@@ -53,7 +53,7 @@ def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
 
 def detect_proxy() -> str | None:
     """依次尝试环境变量、HTTP 代理端口（真实验证可通 YouTube）、SOCKS 端口（TCP 探测）。"""
-    for var in ("V2HTML_PROXY", "https_proxy", "HTTPS_PROXY",
+    for var in ("CONFLOW_PROXY", "V2HTML_PROXY", "https_proxy", "HTTPS_PROXY",
                 "http_proxy", "HTTP_PROXY", "all_proxy", "ALL_PROXY"):
         v = os.environ.get(var)
         if v:

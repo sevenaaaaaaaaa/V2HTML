@@ -1,4 +1,4 @@
-"""V2HTML 服务端 · 语义生成管线：分类 → 文档 → 幻灯片。
+"""ConFlow 服务端 · 语义生成管线：分类 → 文档 → 幻灯片。
 
 把 prompts/ 方法论组装为 LLM 提示词，产物与客户端（ZCode 技能）完全同构：
 output/<video_id>/doc.md + slides.html。
@@ -107,5 +107,5 @@ def build_deck(fragment: str, title: str, theme: str) -> str:
     out = tpl[:start] + fragment + "\n  " + tpl[end:]
     out = re.sub(r'<html lang="zh-CN"( data-theme="[^"]*")?>',
                  f'<html lang="zh-CN" data-theme="{theme}">', out, count=1)
-    out = out.replace("<title>V2HTML 幻灯片</title>", f"<title>{title}</title>")
+    out = out.replace("<title>ConFlow 幻灯片</title>", f"<title>{title}</title>")
     return out

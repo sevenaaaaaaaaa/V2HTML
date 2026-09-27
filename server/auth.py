@@ -1,4 +1,4 @@
-"""V2HTML 服务端 · 管理后台认证（PBKDF2 凭据 + HMAC 签名会话 Cookie）。"""
+"""ConFlow 服务端 · 管理后台认证（PBKDF2 凭据 + HMAC 签名会话 Cookie）。"""
 from __future__ import annotations
 
 import hashlib

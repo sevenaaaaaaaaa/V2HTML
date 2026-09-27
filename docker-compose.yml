@@ -1,18 +1,19 @@
 services:
-  v2html:
+  conflow:
     build: .
     ports:
-      - "${V2HTML_BIND:-127.0.0.1:8410}:8400"
+      - "${CONFLOW_BIND:-127.0.0.1:8410}:8400"
     environment:
       # 语义生成必需：任何 OpenAI 兼容接口（默认智谱 GLM；.env 可覆盖为 DeepSeek 等）
-      V2HTML_LLM_BASE_URL: "${V2HTML_LLM_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}"
-      V2HTML_LLM_API_KEY: "${V2HTML_LLM_API_KEY:?请在 .env 或环境变量中提供}"
-      V2HTML_LLM_MODEL: "${V2HTML_LLM_MODEL:-glm-4.7}"
-      V2HTML_LLM_MAX_TOKENS: "${V2HTML_LLM_MAX_TOKENS:-8192}"
-      V2HTML_LLM_VISION: "${V2HTML_LLM_VISION:-}"
-      V2HTML_WORKERS: "${V2HTML_WORKERS:-1}"
-      V2HTML_TOKEN: "${V2HTML_TOKEN:-}"
-      V2HTML_PROXY: "${V2HTML_PROXY:-}"
+      # 变量已改名 CONFLOW_*，旧 V2HTML_* 写法仍被识别（容器内代码回退读取）
+      CONFLOW_LLM_BASE_URL: "${CONFLOW_LLM_BASE_URL:-${V2HTML_LLM_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}}"
+      CONFLOW_LLM_API_KEY: "${CONFLOW_LLM_API_KEY:-${V2HTML_LLM_API_KEY:?请在 .env 或环境变量中提供}}"
+      CONFLOW_LLM_MODEL: "${CONFLOW_LLM_MODEL:-${V2HTML_LLM_MODEL:-glm-4.7}}"
+      CONFLOW_LLM_MAX_TOKENS: "${CONFLOW_LLM_MAX_TOKENS:-${V2HTML_LLM_MAX_TOKENS:-8192}}"
+      CONFLOW_LLM_VISION: "${CONFLOW_LLM_VISION:-${V2HTML_LLM_VISION:-}}"
+      CONFLOW_WORKERS: "${CONFLOW_WORKERS:-${V2HTML_WORKERS:-1}}"
+      CONFLOW_TOKEN: "${CONFLOW_TOKEN:-${V2HTML_TOKEN:-}}"
+      CONFLOW_PROXY: "${CONFLOW_PROXY:-${V2HTML_PROXY:-}}"
     volumes:
       - ./output:/app/output
     extra_hosts:

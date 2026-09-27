@@ -1,4 +1,4 @@
-"""V2HTML 服务端 · 管理后台（设计语言对齐 OpenFlow：oklch tokens + 玻璃卡片 + 侧栏）。
+"""ConFlow 服务端 · 管理后台（设计语言对齐 OpenFlow：oklch tokens + 玻璃卡片 + 侧栏）。
 
 子路径部署适配：所有跳转、表单 action、链接、fetch 均基于 request.scope["root_path"]
 （服务端以 `uvicorn --root-path /VTH` 启动；本地裸跑时 root_path 为空，两态通用）。
@@ -114,9 +114,9 @@ def page(rp: str, title: str, active: str, body: str, user: str | None = None) -
         for key, label, href in navs)
     html = f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title} · V2HTML 后台</title><style>{CSS}</style></head><body>
+<title>{title} · ConFlow 后台</title><style>{CSS}</style></head><body>
 <div class="layout"><aside class="sb">
-  <div class="logo">V2HTML<small>视频 ⇄ 内容引擎 · 管理</small></div>
+  <div class="logo">ConFlow<small>视频 ⇄ 内容引擎 · 管理</small></div>
   {nav}<div class="sp"></div>
   <div class="who">👤 {user or ""}</div>
   <a class="nav" href="{rp}/admin/logout">退出登录</a>
@@ -144,10 +144,10 @@ def login_page(request: Request, error: str = ""):
     rp = rp_of(request)
     body = f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>登录 · V2HTML 后台</title><style>{CSS}
+<title>登录 · ConFlow 后台</title><style>{CSS}
 body{{display:grid;place-items:center;min-height:100vh;padding:24px}}
 </style></head><body><div class="login-wrap"><div class="login">
-    <h1>V2HTML 管理后台</h1>
+    <h1>ConFlow 管理后台</h1>
     <p class="sub" style="margin-bottom:20px">视频 ⇄ HTML 双向内容引擎</p>
     {'<div class="err">' + error + "</div>" if error else ""}
     <form method="post" action="{rp}/admin/login">
@@ -203,7 +203,7 @@ def dashboard(request: Request):
         f"<td>{j['doc_type']}</td><td>{j['theme']}</td></tr>"
         for j in recent) or "<tr><td colspan=4 style='color:var(--muted)'>还没有任务</td></tr>"
     body = f"""
-    <h1>仪表盘</h1><p class="sub">V2HTML 服务运行概览</p>
+    <h1>仪表盘</h1><p class="sub">ConFlow 服务运行概览</p>
     <div class="cards">
       <div class="card"><div class="k">任务总数</div><div class="v" id="st-total">{len(jobs)}</div></div>
       <div class="card"><div class="k">进行中</div><div class="v" id="st-run">{run}</div></div>
@@ -496,7 +496,7 @@ async def config_save(request: Request):
             "enabled": bool(form.get("push_enabled")),
             "status": str(form.get("push_status", "draft")),
             "category": str(form.get("push_category", "ai-create")),
-            "author": str(form.get("push_author", "V2HTML 引擎")),
+            "author": str(form.get("push_author", "ConFlow 引擎")),
             "openflow_data": str(form.get("push_openflow_data", "")).strip(),
         })
     return RedirectResponse(rp + "/admin/config/?saved=1", 302)

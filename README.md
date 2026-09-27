@@ -1,6 +1,6 @@
 <div align="center">
 
-# V2HTML
+# ConFlow
 
 ### 视频 ⇄ HTML 双向内容引擎
 
@@ -21,7 +21,7 @@
 
 ## 这是什么
 
-看视频学东西很慢,视频里的知识**没法搜索、没法引用、没法分享**;而把视频手工整理成文章和 PPT,一小时的视频往往要花三小时。V2HTML 把这件事变成一条命令。
+看视频学东西很慢,视频里的知识**没法搜索、没法引用、没法分享**;而把视频手工整理成文章和 PPT,一小时的视频往往要花三小时。ConFlow 把这件事变成一条命令。
 
 它把工作拆成两层:**确定性工作**(抓取、字幕、抽帧)交给脚本,**语义工作**(文体判定、结构重组、写作、幻灯片设计)交给 LLM。产出不是流水账字幕,而是按论证结构重写的、可直接发布的内容——数字逐字核对、补全显式标注、作者立场与写作者立场分离,这些防幻觉规则写在 `prompts/` 里,客户端与服务端共用同一套方法论。
 
@@ -43,7 +43,7 @@
 - **逆向 v2video** — 文章 / PPT → 分镜提示词包(Sora / Veo / 可灵)或 HTML 动画演示
 - **双形态运行** — ZCode 客户端技能(`/v2html` `/v2video`,质量上限最高)或 FastAPI 服务端(浏览器提交、任务队列、全自动)
 - **管理后台** — 仪表盘、任务管理(重试 / 推送 / 删除)、执行日志与文档预览、LLM 在线热配置与连接测试
-- **HTTP API** — 创建 / 查询 / 重试 / 推送任务,LLM 与推送配置热更新;公网部署可加 `V2HTML_TOKEN` 鉴权
+- **HTTP API** — 创建 / 查询 / 重试 / 推送任务,LLM 与推送配置热更新;公网部署可加 `CONFLOW_TOKEN` 鉴权
 - **推送到 OpenFlow** — 任务完成后自动把文章写入 [OpenFlow](https://github.com/sevenaaaaaaaaa/openflow) 内容库(幂等覆盖、写前备份),默认草稿态、后台一键发布
 
 | 科普 · 夜紫主题 | 评论 · 暖纸衬线主题 |
@@ -72,7 +72,7 @@ bash bin/install-skills.sh               # 注册 /v2html /v2video 技能
 ```bash
 git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-echo "V2HTML_LLM_API_KEY=你的key" >> .env    # 任何 OpenAI 兼容接口
+echo "CONFLOW_LLM_API_KEY=你的key" >> .env    # 任何 OpenAI 兼容接口
 bash server/run.sh                           # http://0.0.0.0:8400
 ```
 
@@ -86,16 +86,16 @@ bash server/run.sh                           # http://0.0.0.0:8400
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt
 # 2) 环境变量
 cat > .env <<EOT
-V2HTML_LLM_API_KEY=你的key
-V2HTML_LLM_BASE_URL=https://api.deepseek.com/v1
-V2HTML_LLM_MODEL=deepseek-chat
+CONFLOW_LLM_API_KEY=你的key
+CONFLOW_LLM_BASE_URL=https://api.deepseek.com/v1
+CONFLOW_LLM_MODEL=deepseek-chat
 EOT
 # 3) systemd(ExecStart 用 .venv/bin/uvicorn server.app:app --host 127.0.0.1 --port 8410)
 # 4) Apache 子路径反代 /VTH/ → 127.0.0.1:8410(nginx 同理)
 ```
 
 管理后台首次启动前:`.venv/bin/python -c "import sys;sys.path.insert(0,'.');from server import auth;auth.set_credentials('admin','你的密码')"`。
-公网部署设置 `V2HTML_TOKEN`,写接口需要 `Authorization: Bearer <token>`。
+公网部署设置 `CONFLOW_TOKEN`(旧 `V2HTML_TOKEN` 仍兼容),写接口需要 `Authorization: Bearer <token>`。
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
@@ -109,13 +109,13 @@ EOT
 
 ## 定位说明
 
-V2HTML 属于芭乐派产品矩阵的**第三层:Studio 套件**——偏本地工具的产品层。矩阵的分层是:
+ConFlow 属于芭乐派产品矩阵的**第三层:Studio 套件**——偏本地工具的产品层。矩阵的分层是:
 
 - **OpenFlow = 入口层**:TIPS all-in-one,让一人团队(OPC)与中小团队低门槛完成数字化 + AI 化。
 - **Flow 家族 = 进阶层**:MFlow / inFlow / UserLoop / PayFlow / LearnFlow / WebsFlow 按需进阶,各自深耕一个业务场景。
-- **Studio 套件 = 本地工具层**:V2HTML、ThirdC(知识工作台)、InputFlow(隐私输入法)、ZeroZen(广告净化)等,吸引更多用户,长期方向是**作为工作台打通所有 Flow 产品**。
+- **Studio 套件 = 本地工具层**:ConFlow、ThirdC(知识工作台)、InputFlow(隐私输入法)、ZeroZen(广告净化)等,吸引更多用户,长期方向是**作为工作台打通所有 Flow 产品**。
 
-与 OpenFlow 矩阵是**松耦合**:V2HTML 可以完全独立使用(客户端技能或自建服务端);也可以一键把产出推入 OpenFlow 内容库,作为矩阵的内容供给端——视频 → 文章 → 站点发布,一条链路。
+与 OpenFlow 矩阵是**松耦合**:ConFlow 可以完全独立使用(客户端技能或自建服务端);也可以一键把产出推入 OpenFlow 内容库,作为矩阵的内容供给端——视频 → 文章 → 站点发布,一条链路。
 
 ## 使用指南
 
@@ -135,6 +135,6 @@ V2HTML 属于芭乐派产品矩阵的**第三层:Studio 套件**——偏本地�
 
 <div align="center">
 
-**V2HTML** — 看完一条视频,得到一堆可上线的内容。
+**ConFlow** — 看完一条视频,得到一堆可上线的内容。
 
 </div>

@@ -88,7 +88,7 @@ LLM 写东西会一本正经胡说八道，所以方法论里写死了防线：*
 ### 客户端（配合 ZCode，质量上限最高）
 
 ```bash
-git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML
+git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML  # 仓库名沿用 V2HTML,产品名 ConFlow
 pip3 install yt-dlp                      # ffmpeg 需已安装
 bash bin/install-skills.sh               # 注册 /v2html /v2video 技能
 ```
@@ -98,7 +98,7 @@ bash bin/install-skills.sh               # 注册 /v2html /v2video 技能
 ### 服务端（浏览器提交，全自动）
 
 ```bash
-git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML
+git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML  # 仓库名沿用 V2HTML,产品名 ConFlow
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 echo "CONFLOW_LLM_API_KEY=你的key" >> .env    # 任何 OpenAI 兼容接口
 bash server/run.sh                           # http://0.0.0.0:8400

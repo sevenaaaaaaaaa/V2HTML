@@ -1,0 +1,26 @@
+# ConFlow 服务器部署（手动触发）
+# 用途：本机到服务器的 SSH 链路受国际链路波动影响时，从 GitHub Actions runner
+# （境外机房）发起部署，绕开本机网络路径。
+# 前置 secrets：CONFLOW_SSH_KEY / CONFLOW_SSH_HOST / CONFLOW_SSH_PORT
+#   设置：gh secret set CONFLOW_SSH_KEY < ~/OpenFlowDev/.ssh/172.96.253.73_id_ed25519
+# 触发：gh workflow run deploy.yml -R sevenaaaaaaaaa/V2HTML
+name: deploy
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to server
+        env:
+          SSH_KEY: ${{ secrets.CONFLOW_SSH_KEY }}
+          SSH_HOST: ${{ secrets.CONFLOW_SSH_HOST }}
+          SSH_PORT: ${{ secrets.CONFLOW_SSH_PORT }}
+        run: |
+          install -m 600 /dev/stdin /tmp/server_key <<< "$SSH_KEY"
+          ssh -i /tmp/server_key -p "$SSH_PORT" \
+            -o StrictHostKeyChecking=no -o ConnectTimeout=20 \
+            "root@$SSH_HOST" 'bash -s' < deploy/remote-deploy.sh

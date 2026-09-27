@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+:root{
+  --bg:oklch(96.5% .016 85);--fg:oklch(22% .02 70);--muted:oklch(46% .016 70);
+  --accent:oklch(52% .17 258);--accent-strong:oklch(46% .17 258);--accent-soft:oklch(52% .17 258/.12);
+  --ok:oklch(58% .17 152);--ok-soft:oklch(58% .17 152/.12);
+  --warn:oklch(66% .15 75);--warn-soft:oklch(66% .15 75/.16);
+  --violet:oklch(52% .2 300);--violet-soft:oklch(52% .2 300/.1);
+  --line:oklch(86% .014 80);
+  --glass:oklch(100% 0 0/.66);--gb:oklch(100% 0 0/.72);
+  --shadow:0 24px 60px -24px oklch(30% .04 80/.25);
+  --font:"Space Grotesk","PingFang SC","HarmonyOS Sans SC","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+body{width:1560px;height:880px;overflow:hidden;font-family:var(--font);color:var(--fg);
+  background:var(--bg);padding:44px 52px;
+  background-image:radial-gradient(720px 420px at 90% -10%,var(--accent-soft),transparent 60%),
+  radial-gradient(620px 400px at -4% 108%,var(--violet-soft),transparent 55%)}
+h1{font-size:31px;letter-spacing:.01em}
+h1 b{color:var(--accent-strong)}
+.sub{color:var(--muted);font-size:15.5px;margin:8px 0 30px}
+.flow{display:flex;align-items:stretch;gap:14px}
+.stage{background:var(--glass);border:1px solid var(--gb);border-radius:22px;
+  box-shadow:var(--shadow);backdrop-filter:blur(12px);padding:20px 22px;flex:1}
+.stage h2{font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:600;margin-bottom:12px}
+.stage .big{font-size:19px;font-weight:750;margin-bottom:10px;line-height:1.35}
+.stage ul{list-style:none;font-size:13.5px;line-height:2.05;color:var(--fg)}
+.stage ul b{font-weight:700}
+.chip{display:inline-block;padding:1px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.c-blue{background:var(--accent-soft);color:var(--accent-strong)}
+.c-green{background:var(--ok-soft);color:var(--ok)}
+.c-warn{background:var(--warn-soft);color:var(--warn)}
+.c-violet{background:var(--violet-soft);color:var(--violet)}
+.arrow{display:flex;align-items:center;color:var(--accent);font-size:26px;font-weight:700;flex:none}
+.produce{display:flex;flex-direction:column;gap:10px;justify-content:center}
+.prod-card{border-radius:14px;padding:12px 16px;font-size:14px;line-height:1.5}
+.prod-card b{display:block;font-size:15.5px;margin-bottom:3px}
+.pc-doc{background:var(--ok-soft);border:1px solid oklch(58% .17 152/.25)}
+.pc-slides{background:var(--violet-soft);border:1px solid oklch(52% .2 300/.25)}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px}
+.rows{display:flex;gap:14px;margin-top:22px}
+.rows .stage{flex:1}
+.rows .stage .big{font-size:16px;margin-bottom:6px}
+.rows .stage p{font-size:13.5px;line-height:1.75;color:var(--muted)}
+.rows .stage p b{color:var(--fg)}
+.foot{margin-top:20px;color:var(--muted);font-size:12.5px;text-align:center;letter-spacing:.06em}
+</style>
+</head>
+<body>
+<h1>ConFlow 工作原理：<b>一条链接进来，两份可上线的内容出去</b></h1>
+<p class="sub">确定性工作交给脚本，语义工作交给 LLM——产出的不是字幕流水账，而是按论证结构重写的文章与重新设计的幻灯片。</p>
+
+<div class="flow">
+  <div class="stage" style="flex:.72">
+    <h2>① 输入</h2>
+    <div class="big">一条 YouTube<br>链接</div>
+    <ul><li>教程 · 科普 · 评论 · 评测访谈都行</li><li>任何 yt-dlp 支持的源（B 站等）</li></ul>
+  </div>
+  <div class="arrow">→</div>
+  <div class="stage">
+    <h2>② 确定性管线 · <span class="mono">bin/v2h.py</span></h2>
+    <div class="big">脚本抓全素材</div>
+    <ul>
+      <li><b>代理探测</b> · 下载 480p 视频</li>
+      <li><b>字幕</b>：人工字幕优先，无字幕可本地转写兜底</li>
+      <li><b>场景抽帧</b> 24 张 + 关键帧联览图</li>
+    </ul>
+  </div>
+  <div class="arrow">→</div>
+  <div class="stage">
+    <h2>③ 语义核心 · LLM × <span class="mono">prompts/</span> 方法论</h2>
+    <div class="big">按文体方法论重写</div>
+    <ul>
+      <li><b>文体判定</b>：教程 / 科普 / 评论 / 其他，各有专属写作法</li>
+      <li><b>防幻觉规则</b>：<span class="chip c-warn">数字逐字核对</span> <span class="chip c-warn">补全显式标注</span> <span class="chip c-warn">观点归属分离</span></li>
+      <li><b>幻灯片编排</b>：跟随论证结构，不跟随时间轴</li>
+    </ul>
+  </div>
+  <div class="arrow">→</div>
+  <div class="stage" style="flex:.92">
+    <h2>④ 产出（同一次分析）</h2>
+    <div class="produce">
+      <div class="prod-card pc-doc"><b>📄 doc.md · 可直接上线的文章</b>教程含命令逐字核对与避坑清单；科普分层递进；评论带论据可信度分级</div>
+      <div class="prod-card pc-slides"><b>🖥 slides.html · 30 主题重构型幻灯片</b>单文件零依赖，浏览器放映 / 导出 PDF，仅嵌入含独有信息的原视频帧</div>
+    </div>
+  </div>
+</div>
+
+<div class="rows">
+  <div class="stage">
+    <h2>两种使用形态（同一套方法论）</h2>
+    <div class="big">本机技能 or 自建服务</div>
+    <p><b>客户端</b>：ZCode 技能 <span class="mono">/v2html /v2video</span>，一句话驱动，质量上限最高。<br><b>服务端</b>：FastAPI + 管理后台，浏览器提交、任务队列全自动。</p>
+  </div>
+  <div class="stage">
+    <h2>自动推送 · OpenFlow 内容库</h2>
+    <div class="big">任务完成即入草稿箱</div>
+    <p>文章转 HTML 写入 OpenFlow 内容库，附来源视频与配套幻灯片链接；<b>幂等覆盖、写前备份</b>，默认草稿态，后台一键发布。</p>
+  </div>
+  <div class="stage">
+    <h2>逆向 · v2video</h2>
+    <div class="big">文章 → 视频物料</div>
+    <p>把文章 / 幻灯片逆向成<b>分镜提示词包</b>（Sora / Veo / 可灵直接可用）或 HTML 动画演示——内容有了第二分发形态。</p>
+  </div>
+</div>
+<div class="foot">ConFlow · 视频 ⇄ 内容双向引擎 —— 脚本管确定性 · LLM 管语义 · 方法论沉淀在 prompts/，客户端与服务端共用</div>
+</body>
+</html>

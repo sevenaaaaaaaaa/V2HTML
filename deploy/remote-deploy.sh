@@ -7,6 +7,8 @@ cd /www/wwwroot/V2HTML
 [ -f .gitssh.sh ] && export GIT_SSH=/www/wwwroot/V2HTML/.gitssh.sh
 git fetch origin main
 git reset --hard FETCH_HEAD
+# 改名 ConFlow：output/ 不走 git，就地同步旧产物里的品牌残留（生成物，整词替换安全）
+sed -i 's/V2HTML/ConFlow/g' output/*/slides.html 2>/dev/null || true
 systemctl restart v2html
 sleep 2
 systemctl is-active v2html

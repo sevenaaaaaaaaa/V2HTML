@@ -13,14 +13,15 @@ systemctl is-active v2html
 python3 - <<'PY'
 import json, pathlib
 p = pathlib.Path('/www/wwwroot/V2HTML/server-data/config.json')
-# 服务器系统 Python 3.6 默认 ascii，必须显式 utf-8
+# 服务器系统 Python 3.6：读写显式 utf-8，stdout 仅 ascii
 c = json.loads(p.read_text(encoding='utf-8'))
-if c.get('push', {}).get('author') == 'V2HTML 引擎':
+a = c.get('push', {}).get('author')
+if a == 'V2HTML 引擎':
     c['push']['author'] = 'ConFlow 引擎'
     p.write_text(json.dumps(c, ensure_ascii=False, indent=1), encoding='utf-8')
-    print('config author -> ConFlow 引擎')
+    print('config author updated')
 else:
-    print('config author:', c.get('push', {}).get('author'))
+    print('config author:', a.encode('unicode_escape').decode())
 PY
 git log --oneline -1
 echo REMOTE-DEPLOY-DONE

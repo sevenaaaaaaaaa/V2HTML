@@ -32,7 +32,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "bin"))
 import v2h  # noqa: E402  复用客户端素材管线（fetch/transcribe/frames）
 
-from server import auth, generate, jobsdb, llm, pushers, qc, store  # noqa: E402
+from server import auth, batch, generate, jobsdb, llm, pushers, qc, store  # noqa: E402
 from server.admin import router as admin_router  # noqa: E402
 
 OUT = ROOT / "output"
@@ -215,6 +215,41 @@ def push_job(jid: str) -> dict:
 
 # ------------------------------------------------------------------ 路由 ----
 
+def _spawn(url: str, doc_type: str, theme: str, max_frames: int,
+           video_id: str | None = None) -> dict:
+    """建一个任务并入队（批量/订阅与单个提交共用）。"""
+    job = {
+        "id": uuid.uuid4().hex[:12], "url": url,
+        "doc_type": doc_type, "theme": theme, "max_frames": max_frames,
+        "status": "queued", "steps": [], "video_id": video_id,
+        "title": None, "pushed": None, "error": None, "qc": None,
+        "t0": time.time(), "created": time.strftime("%m-%d %H:%M"),
+    }
+    with LOCK:
+        JOBS[job["id"]] = job
+    jobsdb.save(job)
+    EXEC.submit(_run_job, job)
+    return job
+
+
+def _existing_video_ids() -> set[str]:
+    return {j["video_id"] for j in JOBS.values() if j.get("video_id")}
+
+
+def _expand(url: str, limit: int) -> list[dict]:
+    """列表展开（自动带上本机代理探测结果，本地开发也能展开 YouTube）。"""
+    return batch.expand(url, limit=limit, proxy=v2h.detect_proxy())
+
+
+def _already_seen(vid: str, url: str) -> bool:
+    if (OUT / vid / "doc.md").exists():
+        return True
+    if vid in _existing_video_ids():
+        return True
+    return any(j["url"] == url and j["status"] in ("queued", "running", "done")
+               for j in JOBS.values())
+
+
 @app.post("/api/jobs")
 async def create_job(body: dict, request: Request,
                      authorization: str = Header(default="")):
@@ -225,19 +260,24 @@ async def create_job(body: dict, request: Request,
     theme = body.get("theme") or "auto"
     if theme != "auto" and theme not in THEMES:
         raise HTTPException(400, f"未知主题，可选：{', '.join(THEMES)} 或 auto")
-    job = {
-        "id": uuid.uuid4().hex[:12], "url": url,
-        "doc_type": body.get("doc_type") or "auto",
-        "theme": theme, "max_frames": int(body.get("max_frames") or 24),
-        "status": "queued", "steps": [], "video_id": None,
-        "title": None, "pushed": None, "error": None,
-        "t0": time.time(), "created": time.strftime("%m-%d %H:%M"),
-    }
-    with LOCK:
-        JOBS[job["id"]] = job
-    jobsdb.save(job)
-    EXEC.submit(_run_job, job)
-    return {"id": job["id"]}
+    dtype = body.get("doc_type") or "auto"
+    max_frames = int(body.get("max_frames") or 24)
+
+    if batch.looks_batch(url):
+        entries = _expand(url, int(body.get("max_items") or 20))
+        if len(entries) > 1:                       # 单条目视为普通视频，走下方单任务
+            created, skipped = [], 0
+            for e in entries:
+                if _already_seen(e["id"], e["url"]):
+                    skipped += 1
+                    continue
+                created.append(_spawn(e["url"], dtype, theme, max_frames,
+                                      video_id=e["id"])["id"])
+            return {"batch": created, "skipped": skipped,
+                    "total": len(entries), "titles": [e["title"] for e in entries]}
+        if entries:
+            url = entries[0]["url"]
+    return {"id": _spawn(url, dtype, theme, max_frames)["id"]}
 
 
 @app.get("/api/jobs")
@@ -322,6 +362,99 @@ async def api_config_set(section: str, body: dict, request: Request,
     return {section: cfg[section]}
 
 
+# ------------------------------------------------------------ 订阅与调度 ----
+
+def check_sub(sub: dict) -> dict:
+    """检查一个订阅源：展开 → 去重 → 每个新视频建任务。返回 {created, skipped, total}。"""
+    entries = _expand(sub["url"], 12)
+    created, skipped = [], 0
+    for e in entries:
+        if _already_seen(e["id"], e["url"]):
+            skipped += 1
+            continue
+        if len(created) >= int(sub.get("max_new") or 5):
+            break
+        created.append(_spawn(e["url"], sub.get("doc_type") or "auto", "auto", 24,
+                              video_id=e["id"])["id"])
+    jobsdb.sub_update(sub["id"], last_check=time.time())
+    return {"created": created, "skipped": skipped, "total": len(entries)}
+
+
+def _scheduler_loop() -> None:
+    while True:
+        try:
+            now = time.time()
+            for sub in jobsdb.sub_all():
+                if not sub.get("enabled"):
+                    continue
+                if now - float(sub.get("last_check") or 0) < int(sub["interval_hours"]) * 3600:
+                    continue
+                check_sub(sub)
+        except Exception:
+            pass
+        time.sleep(900)  # 15 分钟一轮
+
+
+@app.get("/api/subs")
+def api_subs(request: Request, authorization: str = Header(default="")):
+    _require(request, authorization)
+    return jobsdb.sub_all()
+
+
+@app.post("/api/batch/expand")
+async def api_batch_expand(body: dict, request: Request,
+                           authorization: str = Header(default="")):
+    """只展开不建任务——预览列表内容 / 排查订阅源。"""
+    _require(request, authorization)
+    url = str(body.get("url", "")).strip()
+    if not re.match(r"^https?://", url):
+        raise HTTPException(400, "url 必须是 http(s) 链接")
+    entries = _expand(url, int(body.get("max_items") or 10))
+    return {"total": len(entries), "entries": entries}
+
+
+@app.post("/api/subs")
+async def api_sub_add(body: dict, request: Request,
+                      authorization: str = Header(default="")):
+    _require(request, authorization)
+    url = str(body.get("url", "")).strip()
+    if not re.match(r"^https?://", url):
+        raise HTTPException(400, "url 必须是 http(s) 链接")
+    sub = {
+        "id": uuid.uuid4().hex[:8], "url": url,
+        "name": str(body.get("name", "")).strip()[:60],
+        "doc_type": str(body.get("doc_type", "auto")),
+        "interval_hours": max(1, int(body.get("interval_hours") or 24)),
+        "max_new": max(1, min(int(body.get("max_new") or 5), 20)),
+        "last_check": 0, "enabled": 1,
+        "created": time.strftime("%m-%d %H:%M"),
+    }
+    jobsdb.sub_add(sub)
+    return {"id": sub["id"]}
+
+
+@app.post("/api/subs/{sid}/{action}")
+def api_sub_action(sid: str, action: str, request: Request,
+                   authorization: str = Header(default="")):
+    _require(request, authorization)
+    sub = jobsdb.sub_get(sid)
+    if not sub:
+        raise HTTPException(404, "no such sub")
+    if action == "check":
+        return check_sub(sub)
+    if action == "toggle":
+        jobsdb.sub_update(sid, enabled=0 if sub["enabled"] else 1)
+        return {"ok": True, "enabled": not sub["enabled"]}
+    if action == "delete":
+        jobsdb.sub_delete(sid)
+        return {"ok": True}
+    raise HTTPException(400, "action 必须是 check / toggle / delete")
+
+
+threading.Thread(target=_scheduler_loop, daemon=True,
+                 name="conflow-sub-scheduler").start()
+
+
 @app.get("/api/health")
 def health():
     cfg = store.load()
@@ -344,7 +477,7 @@ def _slash_alias(full_path: str):
     return alias
 
 
-for _p in ("/admin", "/admin/jobs", "/admin/config"):
+for _p in ("/admin", "/admin/jobs", "/admin/subs", "/admin/config"):
     app.get(_p)(_slash_alias(_p))
     app.post(_p)(_slash_alias(_p))
 

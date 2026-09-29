@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import time
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -110,7 +111,7 @@ def rp_of(request: Request) -> str:
 
 def page(rp: str, title: str, active: str, body: str, user: str | None = None) -> HTMLResponse:
     navs = [("dashboard", "仪表盘", rp + "/admin"), ("jobs", "任务管理", rp + "/admin/jobs"),
-            ("config", "系统配置", rp + "/admin/config")]
+            ("subs", "订阅", rp + "/admin/subs"), ("config", "系统配置", rp + "/admin/config")]
     nav = "".join(
         f'<a class="nav{" on" if key == active else ""}" href="{href}">{label}</a>'
         for key, label, href in navs)
@@ -412,6 +413,103 @@ async def admin_delete(request: Request, jid: str):
     from .app import delete_job
     delete_job(jid)
     return RedirectResponse(rp + "/admin/jobs/", 302)
+
+
+# ------------------------------------------------------------------ subs ----
+
+@router.get("/admin/subs", response_class=HTMLResponse)
+def subs_page(request: Request):
+    return subs_view(request)
+
+
+@router.get("/admin/subs/", response_class=HTMLResponse)
+def subs_page_slash(request: Request):
+    return subs_view(request)
+
+
+def subs_view(request: Request):
+    from . import jobsdb
+    from .app import OUT
+    g = _guard(request)
+    if g:
+        return g
+    user = _user(request)
+    rp = rp_of(request)
+    rows = ""
+    subs = sorted(jobsdb.sub_all(), key=lambda s: s["created"], reverse=True)
+    for s in subs:
+        last = time.strftime("%m-%d %H:%M", time.localtime(s["last_check"])) if s["last_check"] else "从未"
+        st = "✅ 开启" if s["enabled"] else "⏸ 暂停"
+        acts = (f"<form class='inline-form' method='post' action='{rp}/admin/subs/{s['id']}/check'>"
+                f"<button class='btn sm'>立即检查</button></form> "
+                f"<form class='inline-form' method='post' action='{rp}/admin/subs/{s['id']}/toggle'>"
+                f"<button class='btn sm ghost'>{'暂停' if s['enabled'] else '开启'}</button></form> "
+                f"<form class='inline-form' method='post' action='{rp}/admin/subs/{s['id']}/delete'>"
+                f"<button class='btn sm danger'>删</button></form>")
+        rows += (f"<tr><td><a href='{s['url']}' target='_blank'>{s['name'] or s['url'][:48]}</a><br>"
+                 f"<span style='font-size:12px;color:var(--muted)'>{s['created']} · 每次最多新增 {s['max_new']} 条</span></td>"
+                 f"<td>{s['doc_type']}<br><span style='font-size:12px;color:var(--muted)'>每 {s['interval_hours']} 小时</span></td>"
+                 f"<td>{st}<br><span style='font-size:12px;color:var(--muted)'>上次检查 {last}</span></td>"
+                 f"<td style='white-space:nowrap'>{acts}</td></tr>")
+    body = f"""<h1>订阅</h1><p class="sub">频道 / 播放列表定期检查，新视频自动建任务（后台每 15 分钟轮转一次，按去重只建没做过的）</p>
+    <div class="panel"><h2>添加订阅</h2>
+      <form method="post" action="{rp}/admin/subs/add">
+      <div class="grid2">
+        <div style="grid-column:1/-1"><label>频道 / 播放列表链接</label>
+          <input name="url" placeholder="https://www.youtube.com/@handle 或 …/playlist?list=…" required></div>
+        <div><label>备注名</label><input name="name" placeholder="选填"></div>
+        <div><label>检查间隔（小时）</label><input name="interval_hours" type="number" value="24" min="1"></div>
+        <div><label>每次最多新增任务</label><input name="max_new" type="number" value="5" min="1" max="20"></div>
+        <div><label>文体</label><select name="doc_type">
+          <option value="auto">自动判定</option><option value="tutorial">教程</option>
+          <option value="science">科普</option><option value="commentary">评论</option>
+          <option value="other">其他</option></select></div>
+      </div>
+      <div style="margin-top:16px"><button class="btn">添加订阅</button></div>
+      </form></div>
+    <div class="panel"><table>
+      <tr><th>订阅源</th><th>文体 · 周期</th><th>状态</th><th>操作</th></tr>
+      {rows or "<tr><td colspan=4 style='color:var(--muted)'>还没有订阅 —— 上面添加一个频道试试</td></tr>"}</table></div>"""
+    return page(rp, "订阅", "subs", body, user)
+
+
+@router.post("/admin/subs/add")
+async def subs_add(request: Request):
+    from . import jobsdb
+    rp = rp_of(request)
+    if not _user(request):
+        return RedirectResponse(rp + "/admin/login", 302)
+    import uuid as _uuid
+    form = await request.form()
+    url = str(form.get("url", "")).strip()
+    if url.startswith("http"):
+        jobsdb.sub_add({
+            "id": _uuid.uuid4().hex[:8], "url": url,
+            "name": str(form.get("name", "")).strip()[:60],
+            "doc_type": str(form.get("doc_type", "auto")),
+            "interval_hours": max(1, int(form.get("interval_hours") or 24)),
+            "max_new": max(1, min(int(form.get("max_new") or 5), 20)),
+            "last_check": 0, "enabled": 1,
+            "created": time.strftime("%m-%d %H:%M"),
+        })
+    return RedirectResponse(rp + "/admin/subs/", 302)
+
+
+@router.post("/admin/subs/{sid}/{action}")
+async def subs_action(request: Request, sid: str, action: str):
+    from . import jobsdb
+    from .app import check_sub
+    rp = rp_of(request)
+    if not _user(request):
+        return RedirectResponse(rp + "/admin/login", 302)
+    sub = jobsdb.sub_get(sid)
+    if sub and action == "check":
+        check_sub(sub)
+    elif sub and action == "toggle":
+        jobsdb.sub_update(sid, enabled=0 if sub["enabled"] else 1)
+    elif action == "delete":
+        jobsdb.sub_delete(sid)
+    return RedirectResponse(rp + "/admin/subs/", 302)
 
 
 # ----------------------------------------------------------------- config ----

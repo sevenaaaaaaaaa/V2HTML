@@ -438,7 +438,14 @@ document.getElementById('go').onclick = async function(){
     const r = await fetch('api/jobs', {method:'POST',
       headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     if(!r.ok){ alert((await r.json()).detail || '提交失败'); }
-    else { document.getElementById('url').value = ''; refresh(); }
+    else {
+      const j = await r.json().catch(() => ({}));
+      if(j.batch){
+        alert(`已创建 ${j.batch.length} 个任务` + (j.skipped ? `，跳过 ${j.skipped} 个已完成` : '') +
+              '，正在排队执行');
+      }
+      document.getElementById('url').value = ''; refresh();
+    }
   } finally { this.disabled = false; }
 };
 fitFrame(); health(); refresh(); setInterval(refresh, 2500);

@@ -12,15 +12,31 @@ from . import store
 DB_PATH = store.DATA_DIR / "jobs.db"
 
 
+_DB_INITED = False
+
+
 def _conn() -> sqlite3.Connection:
+    global _DB_INITED
     store.DATA_DIR.mkdir(parents=True, exist_ok=True)
-    return sqlite3.connect(DB_PATH, timeout=5)
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    if not _DB_INITED:            # 老库惰性自愈：缺表自动补
+        try:
+            init()
+            _DB_INITED = True
+        except Exception:
+            pass
+    return conn
 
 
 def init() -> None:
     with _conn() as c:
         c.execute("CREATE TABLE IF NOT EXISTS jobs ("
                   "id TEXT PRIMARY KEY, t0 REAL NOT NULL, data TEXT NOT NULL)")
+        c.execute("CREATE TABLE IF NOT EXISTS subs ("
+                  "id TEXT PRIMARY KEY, url TEXT NOT NULL, name TEXT DEFAULT '',"
+                  "doc_type TEXT DEFAULT 'auto', interval_hours INTEGER DEFAULT 24,"
+                  "max_new INTEGER DEFAULT 5, last_check REAL DEFAULT 0,"
+                  "enabled INTEGER DEFAULT 1, created TEXT DEFAULT '')")
 
 
 def save(job: dict) -> None:
@@ -51,3 +67,47 @@ def all() -> list[dict]:
         return [json.loads(r[0]) for r in rows]
     except Exception:
         return []
+
+
+# ------------------------------------------------------------- 订阅 subs ----
+
+_SUB_COLS = ("id", "url", "name", "doc_type", "interval_hours",
+             "max_new", "last_check", "enabled", "created")
+
+
+def sub_add(sub: dict) -> None:
+    with _conn() as c:
+        c.execute("INSERT OR REPLACE INTO subs VALUES (?,?,?,?,?,?,?,?,?)",
+                  tuple(sub.get(k) for k in _SUB_COLS))
+
+
+def sub_all() -> list[dict]:
+    if not DB_PATH.exists():
+        return []
+    try:
+        with _conn() as c:
+            rows = c.execute(f"SELECT {','.join(_SUB_COLS)} FROM subs").fetchall()
+        return [dict(zip(_SUB_COLS, r)) for r in rows]
+    except Exception:
+        return []
+
+
+def sub_get(sid: str) -> dict | None:
+    for s in sub_all():
+        if s["id"] == sid:
+            return s
+    return None
+
+
+def sub_update(sid: str, **fields) -> None:
+    keys = [k for k in fields if k in _SUB_COLS]
+    if not keys:
+        return
+    with _conn() as c:
+        c.execute(f"UPDATE subs SET {','.join(k + '=?' for k in keys)} WHERE id=?",
+                  [fields[k] for k in keys] + [sid])
+
+
+def sub_delete(sid: str) -> None:
+    with _conn() as c:
+        c.execute("DELETE FROM subs WHERE id = ?", (sid,))

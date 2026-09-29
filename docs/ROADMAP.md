@@ -20,12 +20,16 @@
 
 ## P1 · 从工具到生产线（1–2 个月）
 
-- [ ] **批量与订阅** — 整频道 / 播放列表导入、RSS/定时抓取、失败自动重试队列。
-  验收：一条频道 URL 建起 N 个任务，管理后台可批量操作。
+- [x] **批量与订阅** — 频道 / 播放列表 URL 在前台与 API 直接展开为任务队列（flat 元数据、按产物与任务双去重）；订阅源后台可管理，调度线程每 15 分钟轮转，新视频自动建任务；`/api/batch/expand` 只展开预览。
+  验收：本地展开真实频道（3Blue1Brown）15 条元数据；TestClient 全流程通过（批量创建 / 去重 / 订阅 check-toggle-delete / 鉴权）。
 - [ ] **多语言产出** — `prompts/` 方法论参数化（目标语言、受众、术语表），文档与幻灯片同语言输出。
   验收：同一视频可指定产出英文版 doc + slides，防幻觉规则不因语言降级。
 - [ ] **短视频脚本版** — doc.md 衍生口播脚本（复用口播节拍写作法），衔接 v2video 分镜链路。
   验收：一次任务可选产出「文章 / 幻灯片 / 短视频脚本」三件套。
+- [ ] **OpenFlow 桥接插件** — 以 OpenFlow PluginSystem 形态提供入口：插件挂后台菜单与配置页（服务器地址 + token），提交/轮询走 ConFlow HTTP API，任务完成后经 openflow cron 心跳原生写入内容库（替代文件级 pushof，走内部 API 更干净）。ThirdC 若有同类插件机制则复用同一桥接模式。
+  验收：openflow 后台出现 ConFlow 页面，提交任务、查看进度、成品直接进入 content-hub。
+- [ ] **CLI 直转模式** — 无服务端、无浏览器的本机形态：`conflow convert <url>`（bin/v2h.py 素材管线 + generate.py 的 LLM 组装 + 本机任意 OpenAI 兼容 key），产出 doc.md + slides.html；与 ZCode 技能（已有客户端形态）、服务端构成三形态。
+  验收：本机一条命令完成全链路，不需要 ZCode 或 FastAPI。
 - [x] **推送适配器抽象** — `server/pushers.py` 统一调度，官方适配 openflow（原有）/ WordPress / 静态目录 / Webhook 四种目标，后台可切换与配置；新目标约 30 行适配器即可注册。
   验收：本地 mock 服务四适配器全通过（含 openflow 幂等与备份、webhook secret 头、WP Basic 认证）；线上以 static 目标实推一个已完成任务验证后切回 openflow。
 - [x] **质量基线自动化** — 引擎内置 `?qc=1` 自检（每页缩放比/溢出 JSON 报告），服务端产出后自动质检：有 headless Chrome 走真实渲染判定，无浏览器回退内容量预算启发式（按真实成品校准）；任务详情逐页标注 ok/warn/fail 与原因，不拦截任务。

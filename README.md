@@ -139,7 +139,7 @@ bash server/run.sh                           # http://0.0.0.0:8400
 
 #### 提交表单 `首页底部 · 我找一条视频试试`
 
-贴一条视频链接，选文体（自动判定 / 教程 / 科普 / 评论 / 其他）与画面帧数，点「提交」即建任务。提交后页面实时显示任务状态，完成即给出文章与幻灯片入口。
+贴一条视频链接（**也支持频道 / 播放列表链接**——自动展开为任务队列，已做过的自动跳过），选文体（自动判定 / 教程 / 科普 / 评论 / 其他）与画面帧数，点「提交」即建任务。提交后页面实时显示任务状态，完成即给出文章与幻灯片入口。
 
 **怎么用**：打开服务端首页 → 底部表单贴链接 → 提交 → 等状态变为完成。（批量任务走管理后台「快速提交」或 HTTP API。）
 
@@ -200,6 +200,12 @@ PBKDF2 哈希凭据 + HMAC 签名会话 Cookie（7 天有效）。首次部署�
 **怎么用**：任务管理 → 点标题进详情；产物按钮直接打开对应文件。
 
 📷 ![任务详情](docs/images/admin-job-detail.png)
+
+#### 订阅管理 `后台 → 订阅`
+
+把频道 / 播放列表设为长期订阅：后台每 15 分钟轮转检查一次，发现新视频自动建任务（按去重只建没做过的，每次最多新增 `max_new` 条）。支持备注名、检查间隔（小时）、文体指定；每个订阅可「立即检查 / 暂停 / 开启 / 删除」。这是把 ConFlow 从手动提交变成持续内容供给线的开关。
+
+**怎么用**：后台 → 订阅 → 填频道或播放列表链接 → 添加；点「立即检查」马上展开一轮。
 
 #### 系统配置 `后台 → 系统配置`
 
@@ -283,12 +289,14 @@ output/ 全部产物一览：视频 ID、时长、帧数、已有哪些产物（
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, max_frames}` |
+| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, max_frames}`；频道/播放列表 URL 自动展开为任务队列（`max_items` 限数量），返回 `{batch: [ids], skipped}` |
 | `GET` | `/api/jobs` · `/api/jobs/{id}` | 任务列表 / 详情（状态、进度、日志、产物链接） |
 | `GET` | `/api/jobs/{id}/doc` | 文档纯文本 |
 | `POST` | `/api/jobs/{id}/retry` `/push` `/delete` | 重试 / 推送 openflow / 删除 |
 | `GET` `POST` | `/api/config` | 读取 / 更新 LLM 与推送配置 |
 | `GET` | `/api/health` | 健康检查（LLM / 代理 / 推送状态） |
+| `GET` `POST` | `/api/subs` | 订阅列表 / 添加订阅（`{url, name, doc_type, interval_hours, max_new}`）；`POST /api/subs/{id}/check·toggle·delete` 管理 |
+| `POST` | `/api/batch/expand` | 只展开列表不建任务（预览频道/播放列表内容） |
 
 **怎么用**：`curl -X POST https://你的域名/VTH/api/jobs -H "Authorization: Bearer $CONFLOW_TOKEN" -H "Content-Type: application/json" -d '{"url":"https://www.youtube.com/watch?v=xxxx"}'`；写接口需 Bearer 头——未设置 TOKEN 时写接口对任何访问者开放，公网部署务必设置。
 

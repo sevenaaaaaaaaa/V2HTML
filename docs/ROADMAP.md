@@ -11,7 +11,10 @@
 - [x] **任务列表持久化** — SQLite（`server-data/jobs.db`），每步执行日志即落盘；重启全量回载，被打断的任务标记为可重试的错误态。
   验收：建任务 → 重启服务 → 任务仍在列表、进度与产物链接完整。
 - [x] **无字幕视频兜底** — 内置 faster-whisper 转写（无 torch 依赖，CPU int8 可跑，PyAV 自带解码）；模型大小 `CONFLOW_WHISPER_MODEL` 可调（默认 `small`），后端可用 `CONFLOW_WHISPER_BACKEND` 强制指定。
-  验收：无字幕视频走 fetch → transcribe → 文档 → 幻灯片全链路。
+  验收：本地（macOS）无字幕视频切片全链路真实转写通过。
+  ⚠️ 已知边界：faster-whisper 依赖的 onnxruntime 对 Python 3.12 只发 manylinux_2_27+ wheel，CentOS7（glibc 2.17）等老系统原生装不上——此类环境下无字幕视频明确报错，待 Docker 镜像（P0）解决；新系统自建不受影响。
+- [ ] **视频源凭据支持** — yt-dlp cookies 通用配置（B 站等站点对海外/机房 IP 有风控，无登录 cookies 会拒绝流访问；实测美国服务器抓 B 站失败，本机正常）。
+  验收：服务器配置 cookies 后，B 站视频可完整走通 fetch → 产出。
 - [ ] **线上 demo 扩到 6–8 条** — 补 B 站源、多主题成品种类，让示例作品区撑起门面。
 - [ ] **一键安装体验** — Docker 镜像与 `pip install conflow-server` 级别的起步体验（评估中）。
 

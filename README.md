@@ -286,11 +286,19 @@ output/ 全部产物一览：视频 ID、时长、帧数、已有哪些产物（
 
 **怎么用**：`curl -X POST https://你的域名/VTH/api/jobs -H "Authorization: Bearer $CONFLOW_TOKEN" -H "Content-Type: application/json" -d '{"url":"https://www.youtube.com/watch?v=xxxx"}'`；写接口需 Bearer 头——未设置 TOKEN 时写接口对任何访问者开放，公网部署务必设置。
 
-### 六、推送集成 `server/pushof.py → OpenFlow 内容库`
+### 六、多目标推送 `server/pushers.py（适配器层）`
 
-任务完成后自动把文章转成 HTML 写入 OpenFlow 内容库（`data/articles/index.json`）：**幂等覆盖**（同一视频再生成更新同 ID 文章，改名前的旧 ID 也兼容）、**写前备份**（保留最近 5 份）、**恢复文件属主**；自带来源视频链接与配套幻灯片链接，默认草稿态，OpenFlow 后台 content-hub 一键发布。
+任务完成后（或后台手动点「推送」），文章按「系统配置 → 推送目标」送达四种目标之一，正文统一带来源署名条（原视频链接 + 配套幻灯片）：
 
-**怎么用**：后台「系统配置 → 推送到 OpenFlow」填数据目录开启；或对单个任务手动点「推送」。
+| 目标 | 说明 | 幂等性 |
+|---|---|---|
+| `openflow` | 写入 [OpenFlow](https://github.com/sevenaaaaaaaaa/openflow) 内容库（`data/articles/index.json`），写前备份（保留 5 份）、恢复文件属主，后台 content-hub 一键发布 | 同视频覆盖更新同 ID 文章 |
+| `wordpress` | WordPress REST（`wp-json/wp/v2/posts`，用户名 + 应用密码认证） | 每次推送新建草稿 |
+| `static` | 渲染为自包含 HTML（含排版样式）落到指定目录，任意静态站 / Nginx 直接挂 | 同 slug 覆盖写文件 |
+| `webhook` | 成品打包 JSON（markdown / html / slides_url / 来源元数据）POST 到任意 URL，带可选 `X-ConFlow-Secret` 头——n8n / Make / 自建流水线即插即用 | 由接收端决定 |
+
+**怎么用**：后台「系统配置 → 推送到内容库」选目标、填对应参数、保存；或对单个任务手动点「推送」。
+**开发者加一个新目标**：写一个 `push_xxx(workdir, meta, doc_md, cfg) -> dict` 注册进 `ADAPTERS`（返回含 id / slug / status / target），约 30 行——这就是官方参考插件。
 
 📷 ![推送结果](docs/images/admin-job-detail.png)
 

@@ -24,10 +24,17 @@ DEFAULTS: dict = {
     },
     "push": {
         "enabled": True,          # 任务完成后自动推送到 openflow
-        "status": "draft",        # draft（进 openflow 后台待发）| published（直接上线）
+        "target": "openflow",     # openflow | wordpress | static | webhook（见 server/pushers.py）
+        "status": "draft",        # draft（进后台待发）| published（直接上线）
         "category": "ai-create",
         "author": "ConFlow 引擎",
         "openflow_data": "/www/wwwroot/nownexts_com/data",
+        "static_dir": "",         # static 目标：HTML 输出目录
+        "webhook_url": "",        # webhook 目标：接收 POST 的 URL
+        "webhook_secret": "",     # webhook 目标：随请求带 X-ConFlow-Secret 头
+        "wp_base": "",            # wordpress 目标：站点地址（https://example.com）
+        "wp_user": "",            # wordpress 目标：用户名
+        "wp_app_password": "",    # wordpress 目标：应用密码（WP 后台-用户-应用密码生成）
     },
     "admin": {},                  # {"username":…, "salt":…, "hash":…}
 }
@@ -60,6 +67,9 @@ def load() -> dict:
         ("llm", "model"): ("CONFLOW_LLM_MODEL", "V2HTML_LLM_MODEL"),
         ("llm", "max_tokens"): ("CONFLOW_LLM_MAX_TOKENS", "V2HTML_LLM_MAX_TOKENS"),
         ("push", "openflow_data"): ("CONFLOW_OPENFLOW_DATA", "V2HTML_OPENFLOW_DATA"),
+        ("push", "target"): ("CONFLOW_PUSH_TARGET", "V2HTML_PUSH_TARGET"),
+        ("push", "webhook_url"): ("CONFLOW_PUSH_WEBHOOK", "V2HTML_PUSH_WEBHOOK"),
+        ("push", "static_dir"): ("CONFLOW_PUSH_STATIC_DIR", "V2HTML_PUSH_STATIC_DIR"),
     }
     for (sec, key), cands in env_map.items():
         if cfg[sec].get(key):

@@ -213,8 +213,8 @@ def dashboard(request: Request):
     <div class="cards">
       <div class="card"><div class="k">LLM</div>
         <div class="v" style="font-size:17px">{'✅ ' + info['llm_model'] if info['llm_configured'] else '⚠️ 未配置'}</div></div>
-      <div class="card"><div class="k">自动推送 openflow</div>
-        <div class="v" style="font-size:17px">{'✅ 开启 · ' + cfg['push']['status'] if cfg['push']['enabled'] else '已关闭'}</div></div>
+      <div class="card"><div class="k">自动推送</div>
+        <div class="v" style="font-size:17px">{'✅ 开启 · ' + (cfg['push'].get('target') or 'openflow') if cfg['push']['enabled'] else '已关闭'}</div></div>
       <div class="card"><div class="k">幻灯片主题库</div><div class="v">30 <small>个</small></div></div>
       <div class="card"><div class="k">前台入口</div>
         <div class="v" style="font-size:15px"><a href="{rp}/" target="_blank">{rp or '/'} ↗</a></div></div>
@@ -276,7 +276,7 @@ def jobs_page(request: Request):
                  f"<span style='font-size:12px;color:var(--muted)'>{j['created']}</span></td>"
                  f"<td>{j['doc_type']}<br><span style='font-size:12px;color:var(--muted)'>{j['theme']}</span></td>"
                  f"<td style='white-space:nowrap'>{acts}</td></tr>")
-    body = f"""<h1>任务管理</h1><p class="sub">全部生成任务与产物入口（推送=写入 openflow 文章库）</p>
+    body = f"""<h1>任务管理</h1><p class="sub">全部生成任务与产物入口（推送=按「系统配置」的推送目标送达：openflow / WordPress / 静态目录 / Webhook）</p>
     <div class="panel"><table>
       <tr><th>状态</th><th>任务</th><th>文体·主题</th><th>操作</th></tr>
       {rows or "<tr><td colspan=4 style='color:var(--muted)'>暂无任务 — 到仪表盘底部提交第一条</td></tr>"}</table></div>"""
@@ -303,9 +303,13 @@ def job_detail(request: Request, jid: str):
         v = job["video_id"]
         pushed = ""
         if job.get("pushed"):
-            pushed = (f"<div class='ok' style='margin-top:12px'>已推送 openflow："
-                      f"<b>{job['pushed']['status']}</b> · {job['pushed']['slug']} — "
-                      f"到 openflow 后台 content-hub 可发布</div>")
+            tg = job['pushed'].get('target', 'openflow')
+            extra = (f"<a href='{job['pushed'].get('link')}' target='_blank'>{job['pushed']['link']}</a>"
+                     if tg == 'wordpress' and job['pushed'].get('link')
+                     else job['pushed'].get('path') or job['pushed'].get('slug'))
+            pushed = (f"<div class='ok' style='margin-top:12px'>已推送 {tg}："
+                      f"<b>{job['pushed']['status']}</b> · {extra} — "
+                      f"{'直接打开即可' if tg in ('wordpress', 'static') else '到 openflow 后台 content-hub 可发布' if tg == 'openflow' else '由接收端处理'}</div>")
         art = f"""<div class="panel"><h2>产物</h2>
           <p style="font-size:14px;line-height:2.3">
             <a class="btn sm" href="{rp}/output/{v}/slides.html" target="_blank">▶ 放映幻灯片</a>
@@ -432,25 +436,41 @@ def config_page(request: Request, saved: str = ""):
       </div></form>
       <div id="test-result"></div></div>
 
-    <div class="panel"><h2>推送到 openflow</h2>
+    <div class="panel"><h2>推送到内容库</h2>
       <form method="post" action="{rp}/admin/config/save">
       <div class="grid2">
         <div><label>任务完成后自动推送</label>
           <select name="push_enabled">
             <option value="1" {'selected' if push['enabled'] else ''}>开启</option>
             <option value="" {'selected' if not push['enabled'] else ''}>关闭</option></select></div>
+        <div><label>推送目标</label>
+          <select name="push_target">
+            <option value="openflow" {'selected' if (push.get('target') or 'openflow') == 'openflow' else ''}>OpenFlow 内容库（幂等覆盖）</option>
+            <option value="wordpress" {'selected' if push.get('target') == 'wordpress' else ''}>WordPress（REST + 应用密码）</option>
+            <option value="static" {'selected' if push.get('target') == 'static' else ''}>静态目录（自包含 HTML）</option>
+            <option value="webhook" {'selected' if push.get('target') == 'webhook' else ''}>Webhook（POST JSON 给 n8n/Make 等）</option></select></div>
         <div><label>推送状态</label>
           <select name="push_status">
-            <option value="draft" {'selected' if push['status'] == 'draft' else ''}>草稿（进 openflow 后台待发）</option>
+            <option value="draft" {'selected' if push['status'] == 'draft' else ''}>草稿（进目标后台待发）</option>
             <option value="published" {'selected' if push['status'] == 'published' else ''}>直接发布上线</option></select></div>
-        <div><label>文章分类</label><input name="push_category" value="{push['category']}"></div>
+        <div><label>文章分类（openflow）</label><input name="push_category" value="{push['category']}"></div>
         <div><label>作者署名</label><input name="push_author" value="{push['author']}"></div>
         <div style="grid-column:1/-1"><label>openflow 数据目录</label>
           <input name="push_openflow_data" value="{push['openflow_data']}"></div>
+        <div style="grid-column:1/-1"><label>静态目录 static_dir（static 目标）</label>
+          <input name="push_static_dir" value="{push.get('static_dir', '')}" placeholder="/www/wwwroot/mysite/conflow"></div>
+        <div style="grid-column:1/-1"><label>Webhook URL（webhook 目标，POST JSON：markdown/html/slides_url 等）</label>
+          <input name="push_webhook_url" value="{push.get('webhook_url', '')}" placeholder="https://hooks.example.com/conflow"></div>
+        <div><label>Webhook Secret（可选，X-ConFlow-Secret 头）</label>
+          <input name="push_webhook_secret" type="password" value="{push.get('webhook_secret', '')}"></div>
+        <div><label>WordPress 站点地址（wordpress 目标）</label>
+          <input name="push_wp_base" value="{push.get('wp_base', '')}" placeholder="https://blog.example.com"></div>
+        <div><label>WP 用户名</label><input name="push_wp_user" value="{push.get('wp_user', '')}"></div>
+        <div><label>WP 应用密码</label><input name="push_wp_app_password" type="password" value="{push.get('wp_app_password', '')}"></div>
       </div>
       <div style="margin-top:18px"><button class="btn">保存推送配置</button></div>
       </form>
-      <p class="sub" style="margin:12px 0 0">推送为幂等覆盖：同一视频再次生成会更新 openflow 里的同 ID 文章。默认草稿态，到 openflow 后台 content-hub 里发布。</p></div>
+      <p class="sub" style="margin:12px 0 0">openflow 为幂等覆盖（同视频更新同 ID 文章）；WordPress 每次推送新建草稿；static 幂等写文件。默认草稿态。</p></div>
 
     <div class="panel"><h2>管理员密码</h2>
       <form method="post" action="{rp}/admin/password?saved=1">
@@ -494,10 +514,17 @@ async def config_save(request: Request):
     if "push_enabled" in form:
         store.update("push", {
             "enabled": bool(form.get("push_enabled")),
+            "target": str(form.get("push_target", "openflow")),
             "status": str(form.get("push_status", "draft")),
             "category": str(form.get("push_category", "ai-create")),
             "author": str(form.get("push_author", "ConFlow 引擎")),
             "openflow_data": str(form.get("push_openflow_data", "")).strip(),
+            "static_dir": str(form.get("push_static_dir", "")).strip(),
+            "webhook_url": str(form.get("push_webhook_url", "")).strip(),
+            "webhook_secret": str(form.get("push_webhook_secret", "")).strip(),
+            "wp_base": str(form.get("push_wp_base", "")).strip(),
+            "wp_user": str(form.get("push_wp_user", "")).strip(),
+            "wp_app_password": str(form.get("push_wp_app_password", "")).strip(),
         })
     return RedirectResponse(rp + "/admin/config/?saved=1", 302)
 

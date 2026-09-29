@@ -32,7 +32,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "bin"))
 import v2h  # noqa: E402  复用客户端素材管线（fetch/transcribe/frames）
 
-from server import auth, generate, jobsdb, llm, pushof, store  # noqa: E402
+from server import auth, generate, jobsdb, llm, pushers, store  # noqa: E402
 from server.admin import router as admin_router  # noqa: E402
 
 OUT = ROOT / "output"
@@ -160,10 +160,10 @@ def _run_job(job: dict) -> None:
         push_cfg = store.load()["push"]
         if push_cfg.get("enabled"):
             try:
-                _log(job, "推送到 openflow…")
-                result = pushof.push(workdir, meta, doc_md)
+                _log(job, f"推送到 {push_cfg.get('target') or 'openflow'}…")
+                result = pushers.push(workdir, meta, doc_md)
                 job["pushed"] = result
-                _log(job, f"已推送 openflow：{result['status']} · {result['slug']}")
+                _log(job, f"已推送 {result.get('target')}：{result.get('status')} · {result['slug']}")
             except Exception as exc:  # noqa: BLE001  推送失败不影响任务
                 _log(job, f"推送失败：{exc}")
     except Exception as exc:  # noqa: BLE001  任务级兜底
@@ -202,7 +202,7 @@ def push_job(jid: str) -> dict:
         raise HTTPException(400, "doc.md 尚未生成")
     meta = v2h.describe(workdir)
     meta["url"] = job["url"]
-    return pushof.push(workdir, meta, doc.read_text(encoding="utf-8"))
+    return pushers.push(workdir, meta, doc.read_text(encoding="utf-8"))
 
 
 # ------------------------------------------------------------------ 路由 ----

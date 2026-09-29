@@ -104,5 +104,5 @@ def push(workdir: pathlib.Path, meta: dict, doc_md: str) -> dict:
     except Exception:
         pass
     return {"id": entry["id"], "slug": entry["slug"], "status": entry["status"],
-            "category": entry["category"], "title": entry["title"],
+            "target": "openflow", "category": entry["category"], "title": entry["title"],
             "admin_url": "/xmp/content-hub?tab=articles"}

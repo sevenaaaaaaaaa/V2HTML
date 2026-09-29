@@ -310,7 +310,7 @@ footer{margin-top:56px;text-align:center;font-size:12.5px;color:var(--faint);lin
     <details><summary>幻灯片和视频截图 PPT 有什么区别？</summary>
       <div class="a">截图拼贴是时间的碎片；ConFlow 的幻灯片是论证的空间化——标题写论断句、每页一个论点、10 种页型承载不同信息类型、只嵌入含独有信息的原视频帧（图表/界面/实物）。上面<a href="#anatomy">「重构长什么样」</a>一节有实物对照。</div></details>
     <details><summary>支持哪些视频源？多长的视频合适？</summary>
-      <div class="a">任何 yt-dlp 支持的源（YouTube、B 站等），有人工字幕的源效果最佳，无字幕视频可装本地 Whisper 兜底。5–20 分钟的信息型视频是甜点区；纯娱乐视频会按「其他」文体产出短摘要。</div></details>
+      <div class="a">任何 yt-dlp 支持的源（YouTube、B 站等），有人工字幕的源效果最佳；无字幕视频由内置 faster-whisper 转写兜底（CPU 可跑，首次使用需下载模型）。5–20 分钟的信息型视频是甜点区；纯娱乐视频会按「其他」文体产出短摘要。</div></details>
     <details><summary>生成的内容可以直接发布吗？版权怎么办？</summary>
       <div class="a">产出默认推为草稿，由你审校后发布。重建内容是对原视频的重组解读，页脚始终保留原视频署名与链接；批量商用前请确认对原内容的授权。系统每页幻灯片都标注原视频时间戳，方便回溯核对。</div></details>
     <details><summary>一定要用它吗？我可以自己拿提示词去用</summary>

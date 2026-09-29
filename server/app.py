@@ -32,7 +32,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "bin"))
 import v2h  # noqa: E402  复用客户端素材管线（fetch/transcribe/frames）
 
-from server import auth, generate, llm, pushof, store  # noqa: E402
+from server import auth, generate, jobsdb, llm, pushof, store  # noqa: E402
 from server.admin import router as admin_router  # noqa: E402
 
 OUT = ROOT / "output"
@@ -55,6 +55,14 @@ EXEC = ThreadPoolExecutor(max_workers=int(
 JOBS: dict[str, dict] = {}
 LOCK = threading.Lock()
 
+# 任务持久化：SQLite 落盘，重启回载（正在跑的标记为中断，可重试）
+jobsdb.init()
+for _j in jobsdb.all():
+    if _j.get("status") in ("queued", "running"):
+        _j["status"] = "error"
+        _j["error"] = "服务重启导致任务中断，可重试（素材可能重新抓取）"
+    JOBS[_j["id"]] = _j
+
 THEMES = ["science", "tutorial", "commentary", "terracotta", "paper-doc", "prism",
           "aurora", "glass", "memphis", "vapor", "riso", "broadsheet", "luxe",
           "academia", "y2k", "blueprint", "pop", "zen", "swiss", "bauhaus",
@@ -64,6 +72,7 @@ THEMES = ["science", "tutorial", "commentary", "terracotta", "paper-doc", "prism
 
 def _log(job: dict, msg: str) -> None:
     job["steps"].append({"t": round(time.time() - job["t0"], 1), "msg": msg})
+    jobsdb.save(job)  # 每一步落盘，重启不丢进度
 
 
 def _api_token() -> str:
@@ -146,6 +155,7 @@ def _run_job(job: dict) -> None:
             generate.build_deck(fragment, title, theme), encoding="utf-8")
         _log(job, f"完成：doc.md + slides.html（主题 {theme}）")
         job["status"] = "done"
+        jobsdb.save(job)
 
         push_cfg = store.load()["push"]
         if push_cfg.get("enabled"):
@@ -169,6 +179,7 @@ def retry_job(jid: str) -> None:
     if not job:
         raise HTTPException(404, "no such job")
     job.update(status="queued", steps=[], error=None, pushed=None)
+    jobsdb.save(job)
     EXEC.submit(_run_job, job)
 
 
@@ -176,6 +187,7 @@ def delete_job(jid: str) -> None:
     job = JOBS.pop(jid, None)
     if not job:
         raise HTTPException(404, "no such job")
+    jobsdb.delete(jid)
     if job.get("video_id"):
         shutil.rmtree(OUT / job["video_id"], ignore_errors=True)
 
@@ -215,6 +227,7 @@ async def create_job(body: dict, request: Request,
     }
     with LOCK:
         JOBS[job["id"]] = job
+    jobsdb.save(job)
     EXEC.submit(_run_job, job)
     return {"id": job["id"]}
 

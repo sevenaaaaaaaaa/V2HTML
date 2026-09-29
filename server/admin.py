@@ -294,7 +294,7 @@ def job_detail(request: Request, jid: str):
     job = JOBS.get(jid)
     if not job:
         body = f"""<h1>任务不存在</h1>
-          <p class="sub">任务列表保存在内存中，服务重启后会清空（产物文件仍在 {rp}/output/ 下）。</p>
+          <p class="sub">任务可能已被删除（任务列表已持久化，重启不丢；产物文件在 {rp}/output/ 下）。</p>
           <p><a class="btn" href="{rp}/admin/jobs">返回任务列表</a></p>"""
         return page(rp, "任务不存在", "jobs", body, user)
     steps = "".join(f"<div>+{s['t']}s　{s['msg']}</div>" for s in job["steps"])

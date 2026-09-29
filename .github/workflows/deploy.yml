@@ -19,8 +19,9 @@ jobs:
           SSH_KEY: ${{ secrets.CONFLOW_SSH_KEY }}
           SSH_HOST: ${{ secrets.CONFLOW_SSH_HOST }}
           SSH_PORT: ${{ secrets.CONFLOW_SSH_PORT }}
+          CONFLOW_TOKEN_VALUE: ${{ secrets.CONFLOW_TOKEN_VALUE }}
         run: |
           install -m 600 /dev/stdin /tmp/server_key <<< "$SSH_KEY"
           ssh -i /tmp/server_key -p "$SSH_PORT" \
             -o StrictHostKeyChecking=no -o ConnectTimeout=20 \
-            "root@$SSH_HOST" 'bash -s' < deploy/remote-deploy.sh
+            "root@$SSH_HOST" "CONFLOW_TOKEN_VALUE='$CONFLOW_TOKEN_VALUE' bash -s" < deploy/remote-deploy.sh

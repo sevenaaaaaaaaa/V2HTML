@@ -81,7 +81,7 @@ LLM 写东西会一本正经胡说八道，所以方法论里写死了防线：*
 
 ### 诚实边界
 
-无字幕视频当前依赖本地 Whisper 兜底；任务列表存内存（重启清空，产物不受影响）；AI 产出质量取决于你配置的模型。详见[当前边界](#当前边界诚实声明)。
+无字幕视频由内置 faster-whisper 转写兜底（CPU 可跑）；AI 产出质量取决于你配置的模型。详见[当前边界](#当前边界诚实声明)。
 
 ## 快速开始
 
@@ -122,7 +122,7 @@ bash server/run.sh                           # http://0.0.0.0:8400
 
 ## 文档
 
-[使用指南](docs/USAGE-GUIDE.md) · [方法论与提示词](prompts/) · [幻灯片引擎](templates/slides.html) · [架构示意图源文件](docs/diagrams/architecture.html)
+[使用指南](docs/USAGE-GUIDE.md) · [路线图](docs/ROADMAP.md) · [方法论与提示词](prompts/) · [幻灯片引擎](templates/slides.html) · [架构示意图源文件](docs/diagrams/architecture.html)
 
 ---
 
@@ -257,7 +257,7 @@ PBKDF2 哈希凭据 + HMAC 签名会话 Cookie（7 天有效）。首次部署�
 
 #### transcribe `python3 bin/v2h.py transcribe <视频ID>`
 
-视频没有字幕时的本地兜底：mlx-whisper（Apple 芯片）或 openai-whisper 转写，产出 transcript.md / transcript.json，之后流程照常。
+视频没有字幕时的本地兜底：优先 mlx-whisper（Apple 芯片），服务器推荐 faster-whisper（无 torch 依赖，CPU 可跑），模型大小 `CONFLOW_WHISPER_MODEL` 可调；产出 transcript.md / transcript.json，之后流程照常。
 
 **怎么用**：fetch 输出提示「没有可用字幕」时运行；首次使用需下载模型。
 
@@ -284,7 +284,7 @@ output/ 全部产物一览：视频 ID、时长、帧数、已有哪些产物（
 | `GET` `POST` | `/api/config` | 读取 / 更新 LLM 与推送配置 |
 | `GET` | `/api/health` | 健康检查（LLM / 代理 / 推送状态） |
 
-**怎么用**：`curl -X POST https://你的域名/VTH/api/jobs -H "Authorization: Bearer $CONFLOW_TOKEN" -H "Content-Type: application/json" -d '{"url":"https://www.youtube.com/watch?v=xxxx"}'`；写接口需 Bearer 头（未设 TOKEN 时仅限本机使用，公网务必设置）。
+**怎么用**：`curl -X POST https://你的域名/VTH/api/jobs -H "Authorization: Bearer $CONFLOW_TOKEN" -H "Content-Type: application/json" -d '{"url":"https://www.youtube.com/watch?v=xxxx"}'`；写接口需 Bearer 头——未设置 TOKEN 时写接口对任何访问者开放，公网部署务必设置。
 
 ### 六、推送集成 `server/pushof.py → OpenFlow 内容库`
 
@@ -296,8 +296,8 @@ output/ 全部产物一览：视频 ID、时长、帧数、已有哪些产物（
 
 ## 当前边界（诚实声明）
 
-- **任务列表不持久化**：服务端重启后任务列表清空（已产出的文件不受影响），持久化在路线图上；
-- **无字幕视频依赖本地 Whisper 兜底**：服务器未装时无字幕视频会失败；
+- **Whisper 模型首次下载**：无字幕视频走内置 faster-whisper 兜底（无 torch 依赖，CPU 可跑），首次使用需下载模型（默认 `small` ≈ 500MB，`CONFLOW_WHISPER_MODEL` 可调），期间任务停在转写步骤；
+- **公网部署务必设置 `CONFLOW_TOKEN`**：未设置时 API 写接口对任何访问者开放，设置后 `/api/health` 的 `auth` 字段应为 `true`（可自查）；
 - **需要你自己的 LLM key**：语义层依赖任意 OpenAI 兼容接口；客户端形态由 ZCode 承担；
 - **产出质量取决于模型**：防幻觉规则能拦截大部分错误，但不能替代人工审校；发布前请确认对原内容的授权。
 

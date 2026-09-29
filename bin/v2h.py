@@ -386,13 +386,16 @@ def transcribe(video_id: str) -> int:
         log("[transcribe] 找不到视频文件")
         return 1
     backend = None
-    for mod in ("mlx_whisper", "faster_whisper", "whisper"):
+    # CONFLOW_WHISPER_BACKEND 可强制指定（mlx_whisper / faster_whisper / whisper），便于测试与部署
+    force = os.environ.get("CONFLOW_WHISPER_BACKEND")
+    for mod in (([force] if force else []) + ["mlx_whisper", "faster_whisper", "whisper"]):
         if run([sys.executable, "-c", f"import {mod}"]).returncode == 0:
             backend = mod
             break
     if not backend:
         log("[transcribe] 无本地 Whisper 可用。安装其一：\n"
-            "  pip3 install --user --break-system-packages mlx-whisper   # Apple Silicon 推荐\n"
+            "  pip3 install --user --break-system-packages mlx-whisper      # Apple Silicon 推荐\n"
+            "  pip3 install --user --break-system-packages faster-whisper   # 无 torch，CPU 服务器推荐\n"
             "  pip3 install --user --break-system-packages openai-whisper")
         return 2
     log(f"[transcribe] 使用 {backend} 转写（首次运行需下载模型，耗时较长）…")
@@ -405,8 +408,12 @@ def transcribe(video_id: str) -> int:
             '[ (s["start"], s["end"], s["text"].strip()) '
             'for s in W.transcribe(r"%s")["segments"] ]' % video,
         "faster_whisper":
+            # 模型大小可调（CONFLOW_WHISPER_MODEL，默认 small 兼顾中文质量与 CPU 耗时）；
+            # int8 量化 + VAD 过静音，服务器 CPU 可跑，PyAV 自带解码不依赖系统 ffmpeg
             '[ (s.start, s.end, s.text.strip()) for s in '
-            'WhisperModel("large-v3").transcribe(r"%s")[0] ]' % video,
+            'WhisperModel("%s", device="cpu", compute_type="int8")'
+            '.transcribe(r"%s", vad_filter=True)[0] ]'
+            % (os.environ.get("CONFLOW_WHISPER_MODEL", "small"), video),
     }[backend]
     code = f"""
 import {backend} as W

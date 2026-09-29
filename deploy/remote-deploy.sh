@@ -9,6 +9,21 @@ git fetch origin main
 git reset --hard FETCH_HEAD
 # 改名 ConFlow：output/ 不走 git，就地同步旧产物里的品牌残留（生成物，整词替换安全）
 sed -i 's/V2HTML/ConFlow/g' output/*/slides.html 2>/dev/null || true
+
+# P0 安全：API 写接口鉴权 token（值由 CI secret 注入；已在 .env 则不覆盖）
+if [ -n "${CONFLOW_TOKEN_VALUE:-}" ]; then
+  touch .env
+  grep -q '^CONFLOW_TOKEN=' .env || echo "CONFLOW_TOKEN=$CONFLOW_TOKEN_VALUE" >> .env
+fi
+# P0 兜底：faster-whisper（无 torch，CPU 转写；装不上不阻塞部署，仅无字幕视频退回失败态）
+if ! .venv/bin/python -c "import faster_whisper" 2>/dev/null; then
+  if command -v uv >/dev/null 2>&1; then
+    uv pip install -q --python .venv/bin/python faster-whisper 2>/dev/null || echo "warn: faster-whisper 安装失败（无字幕兜底暂不可用）"
+  else
+    .venv/bin/python -m pip install -q faster-whisper 2>/dev/null || echo "warn: faster-whisper 安装失败（无字幕兜底暂不可用）"
+  fi
+fi
+
 systemctl restart v2html
 sleep 2
 systemctl is-active v2html

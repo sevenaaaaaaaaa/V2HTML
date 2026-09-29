@@ -32,7 +32,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "bin"))
 import v2h  # noqa: E402  复用客户端素材管线（fetch/transcribe/frames）
 
-from server import auth, generate, jobsdb, llm, pushers, store  # noqa: E402
+from server import auth, generate, jobsdb, llm, pushers, qc, store  # noqa: E402
 from server.admin import router as admin_router  # noqa: E402
 
 OUT = ROOT / "output"
@@ -153,6 +153,14 @@ def _run_job(job: dict) -> None:
                      "commentary": "commentary"}.get(dtype, "geist")
         (workdir / "slides.html").write_text(
             generate.build_deck(fragment, title, theme), encoding="utf-8")
+
+        job["qc"] = qc.check_deck(workdir / "slides.html")
+        qsum = f"质检[{job['qc']['mode']}]：{job['qc']['ok']} 页通过"
+        if job["qc"]["warn"]:
+            qsum += f"，{job['qc']['warn']} 警告"
+        if job["qc"]["fail"]:
+            qsum += f"，{job['qc']['fail']} 不合格"
+        _log(job, qsum)
         _log(job, f"完成：doc.md + slides.html（主题 {theme}）")
         job["status"] = "done"
         jobsdb.save(job)
@@ -253,7 +261,7 @@ def job_detail(jid: str, request: Request, authorization: str = Header(default="
     vid = job["video_id"]
     base = f"output/{vid}" if vid else None
     return {**{k: job[k] for k in ("id", "url", "status", "steps", "video_id",
-                                   "doc_type", "theme", "title", "error", "pushed")},
+                                   "doc_type", "theme", "title", "error", "pushed", "qc")},
             "artifacts": {
                 "slides": f"{base}/slides.html" if vid else None,
                 "doc": f"api/jobs/{jid}/doc" if vid else None,

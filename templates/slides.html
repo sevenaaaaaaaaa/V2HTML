@@ -415,6 +415,36 @@ body.shot-all .slide{position:relative;inset:auto;flex:none;width:1280px;height:
   var urlTheme=qs.get('theme');
   if(urlTheme) document.documentElement.dataset.theme=urlTheme;
 
+  /* 质检模式：?qc=1 —— 全页布局后输出每页缩放比/溢出的 JSON（服务端质检读取） */
+  if(qs.get('qc')){
+    document.body.className='shot shot-all';
+    var qcRun=function(){
+      var rep=[];
+      slides.forEach(function(s,i){
+        var body=s.querySelector('.body');
+        var item={page:i+1, ratio:1, overflow:false};
+        if(body){
+          fit(s);
+          var m=/scale\(([\d.]+)\)/.exec(body.style.transform||'');
+          item.ratio=m?+m[1]:1;
+        }else{
+          item.overflow=(s.scrollHeight>s.clientHeight+2)||(s.scrollWidth>s.clientWidth+2);
+        }
+        rep.push(item);
+      });
+      var old=document.getElementById('qc-report'); if(old) old.remove();
+      var el=document.createElement('script');
+      el.type='application/json'; el.id='qc-report';
+      el.textContent=JSON.stringify(rep);
+      document.body.appendChild(el);
+    };
+    var qcGo=function(){ requestAnimationFrame(qcRun); };
+    if(document.readyState==='complete') qcGo();
+    else addEventListener('load', qcGo);
+    setTimeout(qcRun, 700);       /* 图片解码后的二次校正，幂等覆盖报告 */
+    return;
+  }
+
   function fit(slide){            /* 内容溢出时整体缩小 .body */
     var body=slide.querySelector('.body'); if(!body) return;
     body.style.transform='none'; body.style.width='';

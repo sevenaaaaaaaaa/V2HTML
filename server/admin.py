@@ -88,6 +88,8 @@ label{display:block;font-size:12.5px;color:var(--muted);margin:12px 0 5px;letter
 .b-queued{background:var(--hover)}.b-running{background:var(--accent-soft);color:var(--accent-strong)}
 .b-done{background:var(--ok-soft);color:var(--ok)}.b-error{background:var(--danger-soft);color:var(--danger)}
 .b-paused_no_llm{background:var(--warn-soft);color:var(--warn)}
+.b-ok{background:var(--ok-soft);color:var(--ok)}.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-fail{background:var(--danger-soft);color:var(--danger)}
 .steps{font-family:var(--mono);font-size:12.5px;color:var(--muted);line-height:1.9}
 .login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
 .login{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-lg);
@@ -301,6 +303,19 @@ def job_detail(request: Request, jid: str):
     art = ""
     if job["status"] == "done" and job["video_id"]:
         v = job["video_id"]
+        qcp = ""
+        if job.get("qc") and job["qc"].get("pages"):
+            chips = "".join(
+                f"<span class='badge b-{p['status']}'>P{p['page']}</span> "
+                for p in job["qc"]["pages"])
+            issues = "".join(
+                f"<div>· P{p['page']}　{p['status']}　{p['reason']}</div>"
+                for p in job["qc"]["pages"] if p["status"] != "ok") \
+                or "<div>全部页面通过</div>"
+            qcp = (f"<div class='panel'><h2>幻灯片质检（{job['qc']['mode']}）"
+                   f"<small style='color:var(--muted);font-weight:500'>　ok {job['qc']['ok']} · warn {job['qc']['warn']} · fail {job['qc']['fail']}</small></h2>"
+                   f"<div style='line-height:2.2'>{chips}</div>"
+                   f"<div class='steps' style='margin-top:10px'>{issues}</div></div>")
         pushed = ""
         if job.get("pushed"):
             tg = job['pushed'].get('target', 'openflow')
@@ -317,7 +332,7 @@ def job_detail(request: Request, jid: str):
             <a class="btn sm ghost" href="{rp}/output/{v}/transcript.md" target="_blank">转写稿</a>
             <a class="btn sm ghost" href="{rp}/output/{v}/sheet.jpg" target="_blank">关键帧联览图</a></p>
           {pushed}
-          <iframe src="{rp}/api/jobs/{jid}/doc"></iframe></div>"""
+          <iframe src="{rp}/api/jobs/{jid}/doc"></iframe></div>{qcp}"""
     refresh = ('<meta http-equiv="refresh" content="5">'
                if job["status"] in ("queued", "running") else "")
     body = f"""<h1>任务 {jid}</h1>

@@ -23,6 +23,13 @@ if ! .venv/bin/python -c "import faster_whisper" 2>/dev/null; then
     .venv/bin/python -m pip install -q faster-whisper 2>/dev/null || echo "warn: faster-whisper 安装失败（无字幕兜底暂不可用）"
   fi
 fi
+# yt-dlp 保持最新（B 站等站点 extractor 变动频繁，旧版本会抓取失败）
+if command -v uv >/dev/null 2>&1; then
+  uv pip install -q -U --python .venv/bin/python yt-dlp 2>/dev/null || echo "warn: yt-dlp 升级失败"
+else
+  .venv/bin/python -m pip install -q -U yt-dlp 2>/dev/null || echo "warn: yt-dlp 升级失败"
+fi
+.venv/bin/python -c "import yt_dlp; print('yt-dlp', yt_dlp.version.__version__)" 2>/dev/null || true
 
 systemctl restart v2html
 sleep 2

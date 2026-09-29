@@ -264,19 +264,27 @@ async def create_job(body: dict, request: Request,
     max_frames = int(body.get("max_frames") or 24)
 
     if batch.looks_batch(url):
-        entries = _expand(url, int(body.get("max_items") or 20))
-        if len(entries) > 1:                       # 单条目视为普通视频，走下方单任务
-            created, skipped = [], 0
-            for e in entries:
-                if _already_seen(e["id"], e["url"]):
-                    skipped += 1
-                    continue
-                created.append(_spawn(e["url"], dtype, theme, max_frames,
-                                      video_id=e["id"])["id"])
-            return {"batch": created, "skipped": skipped,
-                    "total": len(entries), "titles": [e["title"] for e in entries]}
-        if entries:
-            url = entries[0]["url"]
+        try:
+            entries = _expand(url, int(body.get("max_items") or 20))
+        except RuntimeError as exc:
+            m = re.search(r"[?&]v=([\w-]+)", url)
+            if m and "list=" in url:
+                url = f"https://www.youtube.com/watch?v={m.group(1)}"  # 列表坏了退回单视频
+            else:
+                raise HTTPException(400, str(exc))  # exc 已带「列表展开失败：」前缀
+        else:
+            if len(entries) > 1:                       # 单条目视为普通视频，走下方单任务
+                created, skipped = [], 0
+                for e in entries:
+                    if _already_seen(e["id"], e["url"]):
+                        skipped += 1
+                        continue
+                    created.append(_spawn(e["url"], dtype, theme, max_frames,
+                                          video_id=e["id"])["id"])
+                return {"batch": created, "skipped": skipped,
+                        "total": len(entries), "titles": [e["title"] for e in entries]}
+            if entries:
+                url = entries[0]["url"]
     return {"id": _spawn(url, dtype, theme, max_frames)["id"]}
 
 

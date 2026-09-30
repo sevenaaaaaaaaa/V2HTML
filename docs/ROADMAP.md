@@ -12,6 +12,8 @@
 4. **一键安装体验**（P0 余项）— Docker 镜像与起步体验（评估中）。
 5. **插件规范 v2**（P2）— 钩子（doc_done / before_push / after_push）、视频源注册、插件管理页。
 6. **定制开发案例补录**（P2 展示位）— 首个定制项目落地后回填 docs/SERVICES.md。
+7. **订阅参数增强**（小项）— 订阅源级 language / script / storyboard 配置（当前新任务默认中文、仅双产出）。
+8. **CI 补强**（小项）— ci.yml 已覆盖语法/导入/引擎与服务端冒烟；补 script-short 与 storyboard 的 mock LLM 端到端用例。
 
 ## P0 · 工程还债（2026-09-30 完成）
 

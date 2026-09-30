@@ -136,7 +136,7 @@ bash server/run.sh                           # http://0.0.0.0:8400
 
 ## 文档
 
-[使用指南](docs/USAGE-GUIDE.md) · [路线图](docs/ROADMAP.md) · [方法论与提示词](prompts/) · [幻灯片引擎](templates/slides.html) · [架构示意图源文件](docs/diagrams/architecture.html)
+[使用指南](docs/USAGE-GUIDE.md) · [路线图](docs/ROADMAP.md) · [变更日志](CHANGELOG.md) · [插件开发](docs/PLUGIN-DEV.md) · [方法论与提示词](prompts/) · [幻灯片引擎](templates/slides.html) · [架构示意图源文件](docs/diagrams/architecture.html)
 
 ---
 
@@ -311,7 +311,7 @@ output/ 全部产物一览：视频 ID、时长、帧数、已有哪些产物（
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, language: zh\|en\|…, script: bool, max_frames}`；频道/播放列表 URL 自动展开为任务队列（`max_items` 限数量），返回 `{batch: [ids], skipped}` |
+| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, language: zh\|en\|…, script: bool, storyboard: bool, sb_duration: 秒, max_frames}`；频道/播放列表 URL 自动展开为任务队列（`max_items` 限数量），返回 `{batch: [ids], skipped}` |
 | `GET` | `/api/jobs` · `/api/jobs/{id}` | 任务列表 / 详情（状态、进度、日志、产物链接） |
 | `GET` | `/api/jobs/{id}/doc` | 文档纯文本 |
 | `POST` | `/api/jobs/{id}/retry` `/push` `/delete` | 重试 / 推送 openflow / 删除 |

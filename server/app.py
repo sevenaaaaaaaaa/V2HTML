@@ -3,9 +3,11 @@
   启动:  uvicorn server.app:app --host 127.0.0.1 --port 8410
   前台:  /                       提交页
          /api/jobs  /api/jobs/{id}  /api/health
-         /output/<video_id>/…     产物（slides.html / doc.md / frames）
+         /api/subs（订阅）  /api/batch/expand（列表展开预览）
+         /output/<video_id>/…     产物（slides.html / doc.md / script.md / storyboard/ / frames）
   管理:  /admin                  仪表盘（需登录）
          /admin/jobs[/id]        任务管理与重试/推送/删除
+         /admin/subs             订阅管理
          /admin/config           LLM / 推送 / 密码配置
 """
 from __future__ import annotations
@@ -40,7 +42,7 @@ from server.admin import router as admin_router  # noqa: E402
 OUT = ROOT / "output"
 OUT.mkdir(exist_ok=True)
 
-app = FastAPI(title="ConFlow Server", version="0.2.0", redirect_slashes=False)
+app = FastAPI(title="ConFlow Server", version="0.4.0", redirect_slashes=False)
 app.include_router(admin_router)
 
 

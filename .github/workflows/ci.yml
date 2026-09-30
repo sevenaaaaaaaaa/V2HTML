@@ -1,0 +1,46 @@
+# ConFlow CI：语法/导入检查 + 引擎冒烟（不触网、不需要 key）
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+      - name: 语法与导入
+        run: |
+          python -m compileall -q server engine bin
+          python -c "
+          from engine import batch, generate, llm, plugins, qc, storyboard
+          from server import admin, app, auth, jobsdb, llm as sllm, pushers, store
+          print('imports ok')"
+      - name: 引擎冒烟（模板注入 / 分镜派生 / 插件发现）
+        run: |
+          python -c "
+          from engine import generate, plugins, storyboard
+          deck = generate.build_deck('<section class=\"slide cover active\"><h1>t</h1></section>', 'T', 'science')
+          assert 'data-theme=\"science\"' in deck
+          d = plugins.discover(force=True)
+          assert 'example-receipt' in d['push']
+          r = storyboard._derive({'title': 't', 'aspect': '16:9', 'shots': [
+              {'id': 1, 'sec': 4, 'narration': 'hello'}]}, {'title': 't'})
+          assert '00:00:00,000 --> 00:00:04,000' in r['srt']
+          print('engine smoke ok')"
+      - name: 服务端冒烟（TestClient，无 key 路径）
+        run: |
+          python -c "
+          from fastapi.testclient import TestClient
+          from server import app as appmod
+          c = TestClient(appmod.app)
+          h = c.get('/api/health').json()
+          assert h['themes'] == 30
+          assert c.get('/api/jobs').status_code in (200, 401)
+          print('server smoke ok')"

@@ -40,6 +40,7 @@ import v2h  # noqa: E402
 
 OUT = ROOT / "output"
 THEME_MAP = {"tutorial": "tutorial", "science": "science", "commentary": "commentary"}
+LANG_CHOICES = list(generate.LANGUAGES)
 
 
 def log(msg: str) -> None:
@@ -89,23 +90,26 @@ def _convert_one(url: str, args) -> dict:
     if args.no_doc and doc_path.exists():
         log("跳过文档（--no-doc 且已有 doc.md）")
     else:
-        log("LLM：撰写文档…")
+        log(f"LLM：撰写文档…（语言：{args.language}）")
         sheet = workdir / "sheet.jpg"
         doc_md = generate.gen_doc(dtype, meta, transcript_md,
-                                  sheet if llm.cfg().get("vision") else None)
+                                  sheet if llm.cfg().get("vision") else None,
+                                  language=args.language)
         doc_path.write_text(doc_md, encoding="utf-8")
         log(f"文档完成 → {doc_path.relative_to(ROOT)}（{len(doc_md)} 字符）")
 
     qc_report = None
     slides_rel = None
     if not args.no_slides:
-        log("LLM：编排幻灯片…")
+        log(f"LLM：编排幻灯片…（语言：{args.language}）")
         frames = json.loads((workdir / "frames.json").read_text(encoding="utf-8"))
         have = {f["file"] for f in frames}
-        fragment = generate.gen_slides(dtype, doc_path.read_text(encoding="utf-8"), frames, have)
+        fragment = generate.gen_slides(dtype, doc_path.read_text(encoding="utf-8"), frames, have,
+                                       language=args.language)
         theme = args.theme if args.theme != "auto" else THEME_MAP.get(dtype, "geist")
         deck = workdir / "slides.html"
-        deck.write_text(generate.build_deck(fragment, title, theme), encoding="utf-8")
+        deck.write_text(generate.build_deck(fragment, title, theme, language=args.language),
+                        encoding="utf-8")
         slides_rel = str(deck.relative_to(ROOT))
         log(f"幻灯片完成 → {slides_rel}（主题 {theme}）")
 
@@ -117,7 +121,7 @@ def _convert_one(url: str, args) -> dict:
             if p["status"] != "ok":
                 log(f"  ⚠ P{p['page']} {p['status']}：{p['reason']}")
 
-    return {"video_id": vid, "title": title, "doc_type": dtype,
+    return {"video_id": vid, "title": title, "doc_type": dtype, "language": args.language,
             "doc": str(doc_path.relative_to(ROOT)), "slides": slides_rel,
             "qc": qc_report, "elapsed_sec": round(time.time() - t0, 1)}
 
@@ -182,6 +186,8 @@ def main() -> int:
     p.add_argument("url", help="视频 / 频道 / 播放列表 URL")
     p.add_argument("--doc-type", choices=["auto", "tutorial", "science", "commentary", "other"],
                    default="auto")
+    p.add_argument("--language", choices=LANG_CHOICES, default="zh",
+                   help="产出语言（默认中文；en/ja/ko/es/fr/de/pt/ru/ar）")
     p.add_argument("--theme", default="auto", help="auto 跟随文体，或 30 主题名")
     p.add_argument("--max-frames", type=int, default=24)
     p.add_argument("--max-items", type=int, default=5, help="频道/播放列表最多转换几个")

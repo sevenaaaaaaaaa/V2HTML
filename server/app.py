@@ -139,8 +139,10 @@ def _run_job(job: dict) -> None:
 
         _log(job, f"LLM：撰写 {dtype} 文档…")
         sheet = workdir / "sheet.jpg"
+        lang = job.get("language") or "zh"
         doc_md = generate.gen_doc(dtype, meta, transcript_md,
-                                  sheet if store.load()["llm"].get("vision") else None)
+                                  sheet if store.load()["llm"].get("vision") else None,
+                                  language=lang)
         (workdir / "doc.md").write_text(doc_md, encoding="utf-8")
 
         _log(job, "LLM：编排幻灯片…")
@@ -154,7 +156,7 @@ def _run_job(job: dict) -> None:
             theme = {"tutorial": "tutorial", "science": "science",
                      "commentary": "commentary"}.get(dtype, "geist")
         (workdir / "slides.html").write_text(
-            generate.build_deck(fragment, title, theme), encoding="utf-8")
+            generate.build_deck(fragment, title, theme, language=lang), encoding="utf-8")
 
         job["qc"] = qc.check_deck(workdir / "slides.html")
         qsum = f"质检[{job['qc']['mode']}]：{job['qc']['ok']} 页通过"
@@ -218,11 +220,12 @@ def push_job(jid: str) -> dict:
 # ------------------------------------------------------------------ 路由 ----
 
 def _spawn(url: str, doc_type: str, theme: str, max_frames: int,
-           video_id: str | None = None) -> dict:
+           video_id: str | None = None, language: str = "zh") -> dict:
     """建一个任务并入队（批量/订阅与单个提交共用）。"""
     job = {
         "id": uuid.uuid4().hex[:12], "url": url,
         "doc_type": doc_type, "theme": theme, "max_frames": max_frames,
+        "language": language if language in generate.LANGUAGES else "zh",
         "status": "queued", "steps": [], "video_id": video_id,
         "title": None, "pushed": None, "error": None, "qc": None,
         "t0": time.time(), "created": time.strftime("%m-%d %H:%M"),
@@ -264,6 +267,9 @@ async def create_job(body: dict, request: Request,
         raise HTTPException(400, f"未知主题，可选：{', '.join(THEMES)} 或 auto")
     dtype = body.get("doc_type") or "auto"
     max_frames = int(body.get("max_frames") or 24)
+    language = (body.get("language") or "zh").lower()
+    if language not in generate.LANGUAGES:
+        raise HTTPException(400, f"未知语言，可选：{', '.join(generate.LANGUAGES)}")
 
     if batch.looks_batch(url):
         try:
@@ -282,12 +288,12 @@ async def create_job(body: dict, request: Request,
                         skipped += 1
                         continue
                     created.append(_spawn(e["url"], dtype, theme, max_frames,
-                                          video_id=e["id"])["id"])
+                                          video_id=e["id"], language=language)["id"])
                 return {"batch": created, "skipped": skipped,
                         "total": len(entries), "titles": [e["title"] for e in entries]}
             if entries:
                 url = entries[0]["url"]
-    return {"id": _spawn(url, dtype, theme, max_frames)["id"]}
+    return {"id": _spawn(url, dtype, theme, max_frames, language=language)["id"]}
 
 
 @app.get("/api/jobs")
@@ -299,6 +305,7 @@ def list_jobs(request: Request, authorization: str = Header(default="")):
 def _job_brief(j: dict) -> dict:
     return {"id": j["id"], "url": j["url"], "status": j["status"],
             "video_id": j["video_id"], "doc_type": j["doc_type"], "theme": j["theme"],
+            "language": j.get("language", "zh"),
             "title": j.get("title"), "error": j["error"], "created": j["created"]}
 
 
@@ -311,7 +318,7 @@ def job_detail(jid: str, request: Request, authorization: str = Header(default="
     vid = job["video_id"]
     base = f"output/{vid}" if vid else None
     return {**{k: job[k] for k in ("id", "url", "status", "steps", "video_id",
-                                   "doc_type", "theme", "title", "error", "pushed", "qc")},
+                                   "doc_type", "theme", "language", "title", "error", "pushed", "qc")},
             "artifacts": {
                 "slides": f"{base}/slides.html" if vid else None,
                 "doc": f"api/jobs/{jid}/doc" if vid else None,

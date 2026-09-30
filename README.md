@@ -68,6 +68,10 @@ ConFlow 把这件事变成一条命令：**贴一条 YouTube 链接，20 分钟�
 
 教程、科普、口播评论、评测访谈，读者的期待完全不同。ConFlow 为每种文体沉淀了专属写作法（`prompts/doc-*.md`）：教程要命令逐字核对 + 避坑清单；科普要直觉 → 机制 → 边界分层递进 + FAQ；评论要论点拆解 + 论据可信度分级（✅⚠️❌）；评测要评分卡前置。系统先判定文体，再按对应方法论执行——也可以手工指定。
 
+### 十种产出语言，防幻觉规则不降级
+
+同一视频可指定产出中文 / English / 日本語 / 한국어 / Español / Français / Deutsch / Português / Русский / العربية 版本的文章与幻灯片（前台表单、CLI `--language`、API `language` 参数均可指定）。语言指令是硬性要求：标题、正文、要点、图表标注、页脚全部切换，代码与专名保留原文；**防幻觉规则不因语言改变**——数字逐字核对、补全显式标注、观点归属分离照常生效。
+
 ### 防幻觉是规则，不是愿望
 
 LLM 写东西会一本正经胡说八道，所以方法论里写死了防线：**数字与命令必须对照转写稿和视频帧逐字核对**；视频没讲清但流程必需的内容，用「💡 补全」显式标注；观点归属严格分离——视频作者的归作者，补全的署名写作者。每页幻灯片都带原视频时间戳，方便回溯核对。
@@ -95,7 +99,7 @@ export CONFLOW_LLM_API_KEY=你的key       # 任何 OpenAI 兼容接口
 python3 bin/conflow.py convert '<视频URL>'
 ```
 
-跑完即得 `output/<id>/doc.md + slides.html`（含逐页质检报告）。频道 / 播放列表链接也能直接转（`--max-items` 限数量）。配置与参数：`python3 bin/conflow.py --help`。
+跑完即得 `output/<id>/doc.md + slides.html`（含逐页质检报告）。频道 / 播放列表链接也能直接转（`--max-items` 限数量），`--language en` 等十种语言直出。配置与参数：`python3 bin/conflow.py --help`。
 
 ### 客户端（配合 ZCode，质量上限最高）
 
@@ -309,7 +313,7 @@ output/ 全部产物一览：视频 ID、时长、帧数、已有哪些产物（
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, max_frames}`；频道/播放列表 URL 自动展开为任务队列（`max_items` 限数量），返回 `{batch: [ids], skipped}` |
+| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, language: zh\|en\|ja\|ko\|es\|fr\|de\|pt\|ru\|ar, max_frames}`；频道/播放列表 URL 自动展开为任务队列（`max_items` 限数量），返回 `{batch: [ids], skipped}` |
 | `GET` | `/api/jobs` · `/api/jobs/{id}` | 任务列表 / 详情（状态、进度、日志、产物链接） |
 | `GET` | `/api/jobs/{id}/doc` | 文档纯文本 |
 | `POST` | `/api/jobs/{id}/retry` `/push` `/delete` | 重试 / 推送 openflow / 删除 |

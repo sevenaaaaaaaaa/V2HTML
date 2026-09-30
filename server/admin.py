@@ -234,6 +234,11 @@ def dashboard(request: Request):
             <option value="science">科普</option><option value="commentary">评论</option>
             <option value="other">其他</option></select></div>
           <div><label>主题（auto=跟随文体）</label><input name="theme" value="auto"></div>
+          <div><label>产出语言</label><select name="language">
+            <option value="zh">中文</option><option value="en">English</option>
+            <option value="ja">日本語</option><option value="ko">한국어</option>
+            <option value="es">Español</option><option value="fr">Français</option>
+          </select></div>
         </div>
         <div style="margin-top:18px"><button class="btn">生成文档 + 幻灯片</button></div>
       </form></div>
@@ -376,7 +381,8 @@ async def admin_create_job(request: Request):
     try:
         r = await create_job({"url": str(form.get("url", "")),
                               "doc_type": str(form.get("doc_type", "auto")),
-                              "theme": str(form.get("theme", "auto"))}, request)
+                              "theme": str(form.get("theme", "auto")),
+                              "language": str(form.get("language", "zh"))}, request)
         jid = r.get("id")
     except Exception:
         pass

@@ -22,6 +22,30 @@ DOC_TYPES = {
     "other": "doc-other.md",
 }
 
+# 产出语言（zh=默认中文不加指令；其余注入硬性语言指令，防幻觉规则不随语言变）
+LANGUAGES = {
+    "zh": None, "en": "English", "ja": "日本語", "ko": "한국어",
+    "es": "Español", "fr": "Français", "de": "Deutsch",
+    "pt": "Português", "ru": "Русский", "ar": "العربية",
+}
+_HTML_LANG = {"zh": "zh-CN"}
+
+
+def lang_directive(language: str) -> str:
+    name = LANGUAGES.get((language or "zh").lower())
+    if not name:
+        return ""
+    return (f"\n\n## 输出语言（硬性要求）\n"
+            f"全部产出使用 **{name}** 撰写：标题、正文、要点、引用、图表标注、页脚注记一律用 {name}；\n"
+            f"代码、命令、专有名词、API 名保留原文；时间戳 ⏱ 与标注体系（💡 补全、✅⚠️❌）格式保持不变，"
+            f"说明文字也用 {name}。\n"
+            f"防幻觉规则不因语言改变：数字与命令逐字核对、补全显式标注、观点归属分离。")
+
+
+def html_lang(language: str) -> str:
+    code = (language or "zh").lower()
+    return _HTML_LANG.get(code, code)
+
 
 def _read(p: pathlib.Path) -> str:
     return p.read_text(encoding="utf-8")
@@ -53,8 +77,8 @@ def classify(meta: dict, transcript_md: str) -> str:
 # ------------------------------------------------------------- 2. 文档 ----
 
 def gen_doc(dtype: str, meta: dict, transcript_md: str,
-            sheet: pathlib.Path | None) -> str:
-    system = _read(PROMPTS / DOC_TYPES[dtype])
+            sheet: pathlib.Path | None, language: str = "zh") -> str:
+    system = _read(PROMPTS / DOC_TYPES[dtype]) + lang_directive(language)
     user = [f"视频元信息：{json.dumps(meta, ensure_ascii=False, default=str)[:2000]}\n\n"
             f"转写稿（[mm:ss] 为时间戳）：\n{_transcript_tail(transcript_md)}\n\n"
             "按方法论产出 doc.md 正文。只输出 Markdown 正文本身，不要围栏、不要解释。"]
@@ -72,8 +96,9 @@ def gen_doc(dtype: str, meta: dict, transcript_md: str,
 # ---------------------------------------------------------- 3. 幻灯片 ----
 
 def gen_slides(dtype: str, doc_md: str, frames: list[dict],
-               available_frame_files: set[str]) -> str:
+               available_frame_files: set[str], language: str = "zh") -> str:
     system = (_read(PROMPTS / "slides.md")
+              + lang_directive(language)
               + "\n\n## 引擎组件速查（templates/slides.html 内置，直接用类名）\n"
               "页面骨架：<section class=\"slide\"> 可选属性 cover/section/closing；页内："
               ".kicker 小标签、h2 标题、.hrule 装饰线、.body 内容区（自动防溢出）、.note 页脚；"
@@ -94,7 +119,7 @@ def gen_slides(dtype: str, doc_md: str, frames: list[dict],
                                     temperature=0.5))
 
 
-def build_deck(fragment: str, title: str, theme: str) -> str:
+def build_deck(fragment: str, title: str, theme: str, language: str = "zh") -> str:
     """把生成的 <section> 片段注入幻灯片引擎，产出自包含 slides.html。"""
     tpl = _read(TEMPLATE)
     fragment = fragment.strip()
@@ -106,6 +131,6 @@ def build_deck(fragment: str, title: str, theme: str) -> str:
     end = tpl.index("</div>\n\n<div id=\"progress\">")
     out = tpl[:start] + fragment + "\n  " + tpl[end:]
     out = re.sub(r'<html lang="zh-CN"( data-theme="[^"]*")?>',
-                 f'<html lang="zh-CN" data-theme="{theme}">', out, count=1)
+                 f'<html lang="{html_lang(language)}" data-theme="{theme}">', out, count=1)
     out = out.replace("<title>ConFlow 幻灯片</title>", f"<title>{title}</title>")
     return out

@@ -36,7 +36,16 @@ def init() -> None:
                   "id TEXT PRIMARY KEY, url TEXT NOT NULL, name TEXT DEFAULT '',"
                   "doc_type TEXT DEFAULT 'auto', interval_hours INTEGER DEFAULT 24,"
                   "max_new INTEGER DEFAULT 5, last_check REAL DEFAULT 0,"
-                  "enabled INTEGER DEFAULT 1, created TEXT DEFAULT '')")
+                  "enabled INTEGER DEFAULT 1, created TEXT DEFAULT '',"
+                  "language TEXT DEFAULT 'zh', script INTEGER DEFAULT 0,"
+                  "storyboard INTEGER DEFAULT 0)")
+        for col, ddl in (("language", "TEXT DEFAULT 'zh'"),
+                         ("script", "INTEGER DEFAULT 0"),
+                         ("storyboard", "INTEGER DEFAULT 0")):
+            try:                      # 老库迁移
+                c.execute(f"ALTER TABLE subs ADD COLUMN {col} {ddl}")
+            except Exception:
+                pass
 
 
 def save(job: dict) -> None:
@@ -72,12 +81,13 @@ def all() -> list[dict]:
 # ------------------------------------------------------------- 订阅 subs ----
 
 _SUB_COLS = ("id", "url", "name", "doc_type", "interval_hours",
-             "max_new", "last_check", "enabled", "created")
+             "max_new", "last_check", "enabled", "created",
+             "language", "script", "storyboard")
 
 
 def sub_add(sub: dict) -> None:
     with _conn() as c:
-        c.execute("INSERT OR REPLACE INTO subs VALUES (?,?,?,?,?,?,?,?,?)",
+        c.execute(f"INSERT OR REPLACE INTO subs VALUES ({','.join('?' * len(_SUB_COLS))})",
                   tuple(sub.get(k) for k in _SUB_COLS))
 
 

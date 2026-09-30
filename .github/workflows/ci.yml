@@ -34,6 +34,8 @@ jobs:
               {'id': 1, 'sec': 4, 'narration': 'hello'}]}, {'title': 't'})
           assert '00:00:00,000 --> 00:00:04,000' in r['srt']
           print('engine smoke ok')"
+      - name: mock E2E 套件
+        run: python tests/test_smoke.py
       - name: 服务端冒烟（TestClient，无 key 路径）
         run: |
           python -c "

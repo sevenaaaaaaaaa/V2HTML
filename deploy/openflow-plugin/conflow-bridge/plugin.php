@@ -2,7 +2,8 @@
 /**
  * ConFlow 桥接插件（for OpenFlow PluginSystem v2）
  *
- * 安装：复制本目录到 openflow 的 plugins/conflow-bridge/，后台「系统 → 插件管理」启用。
+ * 安装：复制本目录到 openflow 的 plugins/conflow-bridge/，后台「系统 → 插件管理」启用
+ *      （manifest 已设 enabled_by_default=false，需手动开启）。
  * 配置：后台 → ConFlow 菜单 → 填 ConFlow 服务器地址（如 https://nownexts.com/VTH）与
  *       API Token（ConFlow 服务器 .env 的 CONFLOW_TOKEN）。
  * 职责边界：本插件只做「提交任务 + 查看进度 + 深链产物」；成品文章由 ConFlow 服务端经其
@@ -10,11 +11,6 @@
  * AI 岗位工具：/api/plugin/conflow-bridge/{health|submit|jobs} 即工具节点，
  *       schema 见 ConFlow 仓库 docs/bridge/ai-tool-schema.json。
  */
-
-if (!defined('PLUGIN_DIR')) {
-    http_response_code(403);
-    exit;
-}
 
 define('CONFLOW_BRIDGE_CFG', DATA_DIR . '/plugins/conflow-bridge/config.json');
 

@@ -455,6 +455,10 @@ def subs_view(request: Request):
     for s in subs:
         last = time.strftime("%m-%d %H:%M", time.localtime(s["last_check"])) if s["last_check"] else "从未"
         st = "✅ 开启" if s["enabled"] else "⏸ 暂停"
+        extras = " · ".join(filter(None, [
+            f"lang {s.get('language') or 'zh'}",
+            "🎬 脚本" if s.get("script") else "",
+            "🎞 分镜" if s.get("storyboard") else ""]))
         acts = (f"<form class='inline-form' method='post' action='{rp}/admin/subs/{s['id']}/check'>"
                 f"<button class='btn sm'>立即检查</button></form> "
                 f"<form class='inline-form' method='post' action='{rp}/admin/subs/{s['id']}/toggle'>"
@@ -462,7 +466,8 @@ def subs_view(request: Request):
                 f"<form class='inline-form' method='post' action='{rp}/admin/subs/{s['id']}/delete'>"
                 f"<button class='btn sm danger'>删</button></form>")
         rows += (f"<tr><td><a href='{s['url']}' target='_blank'>{s['name'] or s['url'][:48]}</a><br>"
-                 f"<span style='font-size:12px;color:var(--muted)'>{s['created']} · 每次最多新增 {s['max_new']} 条</span></td>"
+                 f"<span style='font-size:12px;color:var(--muted)'>{s['created']} · 每次最多新增 {s['max_new']} 条"
+                 + (f" · {extras}" if extras else "") + "</span></td>"
                  f"<td>{s['doc_type']}<br><span style='font-size:12px;color:var(--muted)'>每 {s['interval_hours']} 小时</span></td>"
                  f"<td>{st}<br><span style='font-size:12px;color:var(--muted)'>上次检查 {last}</span></td>"
                  f"<td style='white-space:nowrap'>{acts}</td></tr>")
@@ -479,6 +484,14 @@ def subs_view(request: Request):
           <option value="auto">自动判定</option><option value="tutorial">教程</option>
           <option value="science">科普</option><option value="commentary">评论</option>
           <option value="other">其他</option></select></div>
+        <div><label>产出语言</label><select name="sub_language">
+          <option value="zh">中文</option><option value="en">English</option>
+          <option value="ja">日本語</option><option value="ko">한국어</option>
+          <option value="es">Español</option><option value="fr">Français</option></select></div>
+        <div style="grid-column:1/-1;display:flex;gap:18px;font-size:13.5px;color:var(--muted)">
+          <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" name="sub_script"> 🎬 追加口播脚本</label>
+          <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" name="sub_storyboard"> 🎞 追加分镜包</label>
+        </div>
       </div>
       <div style="margin-top:16px"><button class="btn">添加订阅</button></div>
       </form></div>
@@ -506,6 +519,9 @@ async def subs_add(request: Request):
             "max_new": max(1, min(int(form.get("max_new") or 5), 20)),
             "last_check": 0, "enabled": 1,
             "created": time.strftime("%m-%d %H:%M"),
+            "language": str(form.get("sub_language", "zh")),
+            "script": 1 if form.get("sub_script") else 0,
+            "storyboard": 1 if form.get("sub_storyboard") else 0,
         })
     return RedirectResponse(rp + "/admin/subs/", 302)
 

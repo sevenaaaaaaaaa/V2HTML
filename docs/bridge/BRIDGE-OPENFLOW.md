@@ -15,7 +15,7 @@ ConFlow 服务端 ──任务完成──▶ openflow 推送适配器 ──▶
 ## 安装（OpenFlow 侧）
 
 1. `cp -r deploy/openflow-plugin/conflow-bridge  ~/OpenFlowDev/plugins/`（或服务器对应目录）；
-2. 后台「系统 → 插件管理」启用 **conflow-bridge**；
+2. 后台「系统 → 插件管理」启用 **conflow-bridge**（manifest 已设 `enabled_by_default: false`——文件就位后默认不加载，需手动开启才生效）；
 3. 后台新菜单「ConFlow」→ 填 ConFlow 服务器地址与 API Token（服务器 `.env` 的 `CONFLOW_TOKEN`）→ 保存；
 4. 提交一条视频链接验证：任务出现在列表 → done 后点开产物 → 内容库出现草稿文章。
 

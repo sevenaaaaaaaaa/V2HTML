@@ -426,7 +426,10 @@ def check_sub(sub: dict) -> dict:
         if len(created) >= int(sub.get("max_new") or 5):
             break
         created.append(_spawn(e["url"], sub.get("doc_type") or "auto", "auto", 24,
-                              video_id=e["id"])["id"])
+                              video_id=e["id"],
+                              language=sub.get("language") or "zh",
+                              script=bool(sub.get("script")),
+                              storyboard=bool(sub.get("storyboard")))["id"])
     jobsdb.sub_update(sub["id"], last_check=time.time())
     return {"created": created, "skipped": skipped, "total": len(entries)}
 
@@ -471,6 +474,9 @@ async def api_sub_add(body: dict, request: Request,
     url = str(body.get("url", "")).strip()
     if not re.match(r"^https?://", url):
         raise HTTPException(400, "url 必须是 http(s) 链接")
+    language = (body.get("language") or "zh").lower()
+    if language not in generate.LANGUAGES:
+        raise HTTPException(400, f"未知语言，可选：{', '.join(generate.LANGUAGES)}")
     sub = {
         "id": uuid.uuid4().hex[:8], "url": url,
         "name": str(body.get("name", "")).strip()[:60],
@@ -479,6 +485,9 @@ async def api_sub_add(body: dict, request: Request,
         "max_new": max(1, min(int(body.get("max_new") or 5), 20)),
         "last_check": 0, "enabled": 1,
         "created": time.strftime("%m-%d %H:%M"),
+        "language": language,
+        "script": 1 if body.get("script") else 0,
+        "storyboard": 1 if body.get("storyboard") else 0,
     }
     jobsdb.sub_add(sub)
     return {"id": sub["id"]}

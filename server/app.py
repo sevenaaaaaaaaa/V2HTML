@@ -33,7 +33,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "bin"))
 import v2h  # noqa: E402  复用客户端素材管线（fetch/transcribe/frames）
 
-from engine import batch, generate, qc  # noqa: E402  语义引擎（与形态解耦）
+from engine import batch, generate, plugins, qc, storyboard  # noqa: E402  语义引擎（与形态解耦）
 from server import auth, jobsdb, llm, pushers, store  # noqa: E402
 from server.admin import router as admin_router  # noqa: E402
 
@@ -174,6 +174,15 @@ def _run_job(job: dict) -> None:
                 _log(job, f"脚本完成 → script.md（{len(script_md)} 字符）")
             except Exception as exc:  # noqa: BLE001  脚本失败不影响主产物
                 _log(job, f"脚本生成失败：{exc}")
+        if job.get("storyboard"):
+            _log(job, f"LLM：分镜物料包 storyboard/…（目标 {job.get('sb_duration')}s）")
+            try:
+                sb = storyboard.gen_storyboard(doc_md, meta, language=lang,
+                                               duration=int(job.get("sb_duration") or 60))
+                sb_dir = storyboard.write_storyboard(workdir, sb)
+                _log(job, f"分镜物料包完成 → storyboard/（{len(sb['data']['shots'])} 拍）")
+            except Exception as exc:  # noqa: BLE001  失败不影响主产物
+                _log(job, f"分镜物料包失败：{exc}")
         job["status"] = "done"
         jobsdb.save(job)
 
@@ -229,13 +238,16 @@ def push_job(jid: str) -> dict:
 
 def _spawn(url: str, doc_type: str, theme: str, max_frames: int,
            video_id: str | None = None, language: str = "zh",
-           script: bool = False) -> dict:
+           script: bool = False, storyboard: bool = False,
+           sb_duration: int = 60) -> dict:
     """建一个任务并入队（批量/订阅与单个提交共用）。"""
     job = {
         "id": uuid.uuid4().hex[:12], "url": url,
         "doc_type": doc_type, "theme": theme, "max_frames": max_frames,
         "language": language if language in generate.LANGUAGES else "zh",
         "script": bool(script),
+        "storyboard": bool(storyboard),
+        "sb_duration": int(sb_duration),
         "status": "queued", "steps": [], "video_id": video_id,
         "title": None, "pushed": None, "error": None, "qc": None,
         "t0": time.time(), "created": time.strftime("%m-%d %H:%M"),
@@ -273,14 +285,17 @@ async def create_job(body: dict, request: Request,
     if not re.match(r"^https?://", url):
         raise HTTPException(400, "url 必须是 http(s) 链接")
     theme = body.get("theme") or "auto"
-    if theme != "auto" and theme not in THEMES:
-        raise HTTPException(400, f"未知主题，可选：{', '.join(THEMES)} 或 auto")
+    valid_themes = set(THEMES) | set(plugins.plugin_themes())
+    if theme != "auto" and theme not in valid_themes:
+        raise HTTPException(400, f"未知主题，可选：{', '.join(sorted(valid_themes))} 或 auto")
     dtype = body.get("doc_type") or "auto"
     max_frames = int(body.get("max_frames") or 24)
     language = (body.get("language") or "zh").lower()
     if language not in generate.LANGUAGES:
         raise HTTPException(400, f"未知语言，可选：{', '.join(generate.LANGUAGES)}")
     want_script = bool(body.get("script"))
+    want_sb = bool(body.get("storyboard"))
+    sb_duration = max(15, min(int(body.get("sb_duration") or 60), 300))
 
     if batch.looks_batch(url):
         try:
@@ -300,13 +315,15 @@ async def create_job(body: dict, request: Request,
                         continue
                     created.append(_spawn(e["url"], dtype, theme, max_frames,
                                           video_id=e["id"], language=language,
-                                          script=want_script)["id"])
+                                          script=want_script, storyboard=want_sb,
+                                          sb_duration=sb_duration)["id"])
                 return {"batch": created, "skipped": skipped,
                         "total": len(entries), "titles": [e["title"] for e in entries]}
             if entries:
                 url = entries[0]["url"]
     return {"id": _spawn(url, dtype, theme, max_frames, language=language,
-                         script=want_script)["id"]}
+                         script=want_script, storyboard=want_sb,
+                         sb_duration=sb_duration)["id"]}
 
 
 @app.get("/api/jobs")
@@ -336,6 +353,7 @@ def job_detail(jid: str, request: Request, authorization: str = Header(default="
                 "slides": f"{base}/slides.html" if vid else None,
                 "doc": f"api/jobs/{jid}/doc" if vid else None,
                 "script": f"{base}/script.md" if vid else None,
+                "storyboard": f"{base}/storyboard/storyboard.json" if vid else None,
                 "transcript": f"{base}/transcript.md" if vid else None,
                 "sheet": f"{base}/sheet.jpg" if vid else None,
             }}

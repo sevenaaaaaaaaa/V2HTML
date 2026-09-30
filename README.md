@@ -130,15 +130,9 @@ bash server/run.sh                           # http://0.0.0.0:8400
 
 **ConFlow 的核心功能——包括最值钱的 `prompts/` 方法论和 30 主题幻灯片引擎——过去、现在、将来都永久开源，MIT 协议。**
 
-- **商业化边界**：我们还没想好有什么必须商业化的——当前唯一的「付费位」留给**需要定制化开发的项目**（私有视频源接入、企业内容库对接、专属文体写作法等）。核心开源版永远够用，这是承诺。
-- **开源生态**：ConFlow 是[芭乐派](https://nownexts.com)产品矩阵 Studio 层的本地工具，与 [OpenFlow](https://github.com/sevenaaaaaaaaa/openflow)（入口层）及 MFlow / inFlow / PayFlow / LearnFlow / WebsFlow 等 Flow 家族**互相开源、互相打通**——ConFlow 产出的内容一键进入 OpenFlow 内容库，视频 → 文章 → 站点发布一条链路。
-- **开发者做插件**：ConFlow 的扩展点就是文件，改完即生效——
-  - **新文体** = 往 `prompts/` 加一个 `doc-你的文体.md`（写作法）+ 在分类规则里加几行；
-  - **新主题** = 往 `templates/slides.html` 加一段 `[data-theme="你的主题"]` CSS（六个变量起步，组件级覆写随意）；
-  - **新推送目标** = 参照 `server/pushof.py` 写一个适配器（word­press / Notion / 静态站……）；
-  - **新视频源** = yt-dlp 支持的就已支持（YouTube / B 站 / …），无需开发。
-  
-  更正式的插件规范与示例库在路线图上，欢迎先 fork 玩起来——善意 fork 与二次开发均受 MIT 保护。
+- **商业化边界**：我们还没想好有什么必须商业化的——当前唯一的「付费位」留给**需要定制化开发的项目**（[私有视频源接入 / 企业内容库对接 / 专属文体与主题](docs/SERVICES.md)）。核心开源版永远够用，这是承诺。
+- **开源生态**：ConFlow 是[芭乐派](https://nownexts.com)产品矩阵 Studio 层的本地工具，与 [OpenFlow](https://github.com/sevenaaaaaaaaa/openflow)（入口层）及 MFlow / inFlow / PayFlow / LearnFlow / WebsFlow 等 Flow 家族**互相开源、互相打通**——ConFlow 产出的内容一键进入 OpenFlow 内容库，视频 → 文章 → 站点发布一条链路；[OpenFlow 桥接插件](docs/bridge/BRIDGE-OPENFLOW.md)与 [AI 岗位工具节点](docs/bridge/ai-tool-schema.json)已在路线图落地。
+- **开发者做插件**：**插件规范 v1 已落地**——`plugins/<id>/` 目录放一个 `plugin.json` 即可注册**推送目标 / 新文体 / 幻灯片主题**三类扩展（[插件开发指南](docs/PLUGIN-DEV.md)，官方示例 `plugins/example-receipt/` 约 20 行）；正式钩子规范（doc_done / before_push 等）在 P2 路线图。
 
 ## 文档
 

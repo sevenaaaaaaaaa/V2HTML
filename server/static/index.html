@@ -347,7 +347,9 @@ footer{margin-top:56px;text-align:center;font-size:12.5px;color:var(--faint);lin
         <input id="max_frames" type="number" value="24" min="8" max="48"></div>
       <div style="flex:0;display:flex;align-items:flex-end;gap:12px;padding-bottom:9px">
         <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer">
-          <input type="checkbox" id="want_script"> 🎬 短视频脚本</label>
+          <input type="checkbox" id="want_script"> 🎬 脚本</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer">
+          <input type="checkbox" id="want_storyboard"> 🎞 分镜包</label>
         <button class="btn" id="go">生成</button></div>
     </div>
     <p class="hint" id="formhint"></p>
@@ -445,7 +447,8 @@ document.getElementById('go').onclick = async function(){
                   theme: document.getElementById('theme').value,
                   language: document.getElementById('language').value,
                   max_frames: +document.getElementById('max_frames').value || 24,
-                  script: document.getElementById('want_script').checked};
+                  script: document.getElementById('want_script').checked,
+                  storyboard: document.getElementById('want_storyboard').checked};
     const r = await fetch('api/jobs', {method:'POST',
       headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     if(!r.ok){ alert((await r.json()).detail || '提交失败'); }

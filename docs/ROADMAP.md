@@ -6,10 +6,12 @@
 
 ## 待办清单（当前排序，做完一项勾一项）
 
-1. **OpenFlow 桥接插件**（P1）— PluginSystem 挂菜单/配置页，走 ConFlow API + openflow 心跳原生写内容库。
-2. **线上 demo 扩到 6–8 条**（P0 余项）— 补多主题/多文体成品，撑起示例作品区门面。
-3. **一键安装体验**（P0 余项）— Docker 镜像与起步体验（评估中）。
-4. **视频直出 / 正式插件规范 / AI 岗位工具 / 定制开发案例**（P2，见下）。
+1. **OpenFlow 桥接插件宿主联调**（P1 收尾）— 交付件已就绪（deploy/openflow-plugin/ + docs/bridge/），待 OpenFlow 侧排期安装与端到端联调。
+2. **线上 demo 扩到 6–8 条**（P0 余项）— 补多主题/多文体/多语言成品，撑起示例作品区门面。
+3. **视频直出 · 阶段二（渲染成片）**（P2）— Remotion / 云端渲染选型；storyboard.json 接口已冻结。
+4. **一键安装体验**（P0 余项）— Docker 镜像与起步体验（评估中）。
+5. **插件规范 v2**（P2）— 钩子（doc_done / before_push / after_push）、视频源注册、插件管理页。
+6. **定制开发案例补录**（P2 展示位）— 首个定制项目落地后回填 docs/SERVICES.md。
 
 ## P0 · 工程还债（2026-09-30 完成）
 
@@ -42,12 +44,16 @@
 - [x] **质量基线自动化** — 引擎内置 `?qc=1` 自检（每页缩放比/溢出 JSON 报告），服务端产出后自动质检：有 headless Chrome 走真实渲染判定，无浏览器回退内容量预算启发式（按真实成品校准）；任务详情逐页标注 ok/warn/fail 与原因，不拦截任务。
   验收：故意超载页两种模式均检出（render：压缩至 36% 标红；heuristic：998 字符超预算）；四套真实成品全过；无浏览器/旧引擎 deck 回退链验证。
 
-## P2 · 平台化（一个季度维度）
+## P2 · 平台化
 
-- [ ] **视频直出** — 分镜 JSON → 渲染成片。先走已验证的 HTML 动画路径，Remotion/服务端渲染选型评估中。
-- [ ] **正式插件规范** — manifest + 钩子（文体注册 / 主题注册 / 推送注册 / 视频源注册），对齐 OpenFlow PluginSystem 心智。
-- [ ] **OpenFlow AI 岗位工具** — ConFlow API 注册为 OpenFlow 自动化画布的工具节点，「内容供给」成为 AI 岗位可调度的能力。
-- [ ] **定制开发展示位** — 2–3 个真实案例（私有视频源接入、企业内容库对接、专属文体写作法）；只做对接与定制，核心功能永不收费。
+- [x] **视频直出 · 阶段一（渲染接口）** — `engine/storyboard.py`：doc.md → LLM 产出 `storyboard/storyboard.json`（shots 含 narration/scene/motion/on_screen 与 sora/veo/kling 提示词，即渲染器输入接口），narration.md / subs.srt / README 确定性派生；CLI `--storyboard` / API `storyboard: true` / 前台「🎞 分镜包」勾选。
+  验收：线上真实 LLM 任务（见部署记录）；**阶段二（渲染成片：Remotion / 云端渲染选型）未开始**，接口已按其输入冻结。
+- [x] **正式插件规范 v1** — `plugins/<id>/` + `plugin.json` 文件即约定：push.py 注册推送目标（目标名=目录名）、doc-<type>.md 注册新文体、themes.css 注入主题（manifest.themes 声明即接受）；失败隔离（单插件挂不拖垮主流程）。文档 docs/PLUGIN-DEV.md，官方示例 plugins/example-receipt/。
+  验收：本地加载示例插件 → 推送目标清单含 example-receipt、示例回执落盘；钩子规范（doc_done/before_push 等）为 v2 候选。
+- [x] **OpenFlow AI 岗位工具 / 桥接插件交付件** — `deploy/openflow-plugin/conflow-bridge/`（按宿主 PluginSystem v2 真实约定：register_admin_menu/register_admin_page/register_api_route + DATA_DIR json 配置，php -l 通过）；工具节点 `/api/plugin/conflow-bridge/{health|submit|jobs}`，schema 见 docs/bridge/ai-tool-schema.json（conflow_submit_video / conflow_check_job）；发布链路复用已验证的 openflow 推送适配器。
+  验收：PHP 语法校验通过 + 约定与宿主真实插件（userloop-bridge/example-plugin）逐条对齐；**宿主侧安装与端到端联调待 OpenFlow 侧排期**。
+- [x] **定制开发展示位** — docs/SERVICES.md：三个服务包（私有视频源接入 / 企业内容库对接 / 专属文体与主题）+ 工作方式（能用插件解决的优先指导自做）+ 案例展示位；README 开源章节收口。
+  验收：展示位就绪；真实案例待首个项目落地后补验收记录。
 
 ## 不做（与定位冲突，明确拒绝）
 

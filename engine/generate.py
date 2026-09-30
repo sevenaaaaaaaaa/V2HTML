@@ -9,11 +9,12 @@ import json
 import pathlib
 import re
 
-from . import llm
+from . import llm, plugins
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PROMPTS = ROOT / "prompts"
 TEMPLATE = ROOT / "templates" / "slides.html"
+PLUGINS = plugins.PLUGINS_DIR
 
 DOC_TYPES = {
     "tutorial": "doc-tutorial.md",
@@ -21,6 +22,7 @@ DOC_TYPES = {
     "commentary": "doc-commentary.md",
     "other": "doc-other.md",
 }
+plugins.register_doc_types()   # 插件的 doc-<type>.md 注册为扩展文体
 
 # 产出语言（zh=默认中文不加指令；其余注入硬性语言指令，防幻觉规则不随语言变）
 LANGUAGES = {
@@ -147,4 +149,9 @@ def build_deck(fragment: str, title: str, theme: str, language: str = "zh") -> s
     out = re.sub(r'<html lang="zh-CN"( data-theme="[^"]*")?>',
                  f'<html lang="{html_lang(language)}" data-theme="{theme}">', out, count=1)
     out = out.replace("<title>ConFlow 幻灯片</title>", f"<title>{title}</title>")
+    plugin_css = "\n".join(
+        f'<style data-plugin="{p.parts[-2]}/{p.parts[-1]}">{css}</style>'
+        for p, css in zip(sorted(PLUGINS.glob("*/themes.css")), plugins.themes_css()))
+    if plugin_css:
+        out = out.replace("</head>", plugin_css + "\n</head>", 1)
     return out

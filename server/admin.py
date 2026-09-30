@@ -313,6 +313,9 @@ def job_detail(request: Request, jid: str):
         has_script = (OUT_DIR / v / "script.md").exists()
         script_link = (f"<a class='btn sm ghost' href='{rp}/output/{v}/script.md' "
                        f"target='_blank'>🎬 脚本</a>" if has_script else "")
+        has_sb = (OUT_DIR / v / "storyboard" / "storyboard.json").exists()
+        sb_link = (f"<a class='btn sm ghost' href='{rp}/output/{v}/storyboard/storyboard.json' "
+                   f"target='_blank'>🎞 分镜包</a>" if has_sb else "")
         qcp = ""
         if job.get("qc") and job["qc"].get("pages"):
             chips = "".join(
@@ -340,6 +343,7 @@ def job_detail(request: Request, jid: str):
             <a class="btn sm" href="{rp}/output/{v}/slides.html" target="_blank">▶ 放映幻灯片</a>
             <a class="btn sm ghost" href="{rp}/api/jobs/{jid}/doc" target="_blank">文档 doc.md</a>
             {script_link}
+            {sb_link}
             <a class="btn sm ghost" href="{rp}/output/{v}/transcript.md" target="_blank">转写稿</a>
             <a class="btn sm ghost" href="{rp}/output/{v}/sheet.jpg" target="_blank">关键帧联览图</a></p>
           {pushed}

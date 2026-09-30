@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "tool_group": "conflow",
+  "title": "ConFlow 视频转内容（AI 岗位工具节点）",
+  "description": "把视频链接交给 ConFlow 服务端，产出可上线的文章、30 主题幻灯片、口播脚本与分镜物料包，成品自动进入内容库草稿。适用于自动化画布/AI 岗位的「内容供给」步骤。",
+  "auth": "Authorization: Bearer <CONFLOW_TOKEN>（由 OpenFlow 桥接插件代持，AI 岗位无需接触密钥）",
+  "endpoints": {
+    "health": {
+      "method": "GET",
+      "path": "/api/plugin/conflow-bridge/health",
+      "via": "openflow-bridge 插件",
+      "desc": "检查桥接与 LLM 配置状态"
+    },
+    "submit": {
+      "method": "POST",
+      "path": "/api/plugin/conflow-bridge/submit",
+      "via": "openflow-bridge 插件",
+      "body": {
+        "url": "视频/频道/播放列表链接（必填）",
+        "doc_type": "auto | tutorial | science | commentary | other",
+        "language": "zh | en | ja | ko | es | fr | de | pt | ru | ar",
+        "script": "布尔，追加 45–90s 口播脚本"
+      },
+      "returns": {"id": "任务 ID"}
+    },
+    "jobs": {
+      "method": "GET",
+      "path": "/api/plugin/conflow-bridge/jobs",
+      "desc": "任务列表（status: queued/running/done/error/paused_no_llm）"
+    },
+    "job_detail": {
+      "method": "GET",
+      "path": "<server>/api/jobs/{id}",
+      "auth": "Bearer CONFLOW_TOKEN",
+      "desc": "进度、执行日志、产物链接（doc/slides/script/storyboard）"
+    }
+  },
+  "suggested_tool_definitions": [
+    {
+      "name": "conflow_submit_video",
+      "description": "提交一条视频链接给 ConFlow 转成文章与幻灯片（异步，返回任务 ID）",
+      "parameters": {
+        "url": {"type": "string", "required": true},
+        "doc_type": {"type": "string", "enum": ["auto", "tutorial", "science", "commentary", "other"], "default": "auto"},
+        "language": {"type": "string", "default": "zh"},
+        "script": {"type": "boolean", "default": false}
+      }
+    },
+    {
+      "name": "conflow_check_job",
+      "description": "查询转换任务状态；done 时产物已自动进入内容库草稿",
+      "parameters": {"job_id": {"type": "string", "required": true}}
+    }
+  ]
+}

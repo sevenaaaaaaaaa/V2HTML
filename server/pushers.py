@@ -20,6 +20,7 @@ import urllib.request
 
 import markdown as md_lib
 
+from engine import plugins
 from . import pushof, store
 
 
@@ -154,7 +155,7 @@ def push_webhook(workdir: pathlib.Path, meta: dict, doc_md: str, cfg: dict) -> d
 
 # -------------------------------------------------------------- 调度入口 ----
 
-ADAPTERS = {
+BUILTIN_ADAPTERS = {
     "openflow": push_openflow,
     "wordpress": push_wordpress,
     "static": push_static,
@@ -162,13 +163,18 @@ ADAPTERS = {
 }
 
 
+def _all_adapters() -> dict:
+    """内置 + 插件提供的适配器（插件目标名 = plugins/<目录名>）。"""
+    return {**BUILTIN_ADAPTERS, **plugins.push_adapters()}
+
+
 def push(workdir: pathlib.Path, meta: dict, doc_md: str) -> dict:
     """按 cfg["push"]["target"] 分发；结果 dict 统一带 target 字段。"""
     cfg = store.load()["push"]
     target = (cfg.get("target") or "openflow").strip().lower()
-    fn = ADAPTERS.get(target)
+    fn = _all_adapters().get(target)
     if not fn:
-        raise RuntimeError(f"未知推送目标：{target}（可选：{', '.join(ADAPTERS)}）")
+        raise RuntimeError(f"未知推送目标：{target}（可选：{', '.join(_all_adapters())}）")
     result = fn(workdir, meta, doc_md, cfg)
     result.setdefault("target", target)
     return result

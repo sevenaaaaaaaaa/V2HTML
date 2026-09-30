@@ -1,0 +1,6 @@
+{
+  "name": "Example Receipt 推送（示例插件）",
+  "version": "0.1.0",
+  "description": "演示插件规范：把推送回执写成 receipt.txt 落到 static_dir。可复制本目录改造为你的第一个推送目标。",
+  "author": "ConFlow 官方示例"
+}

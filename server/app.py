@@ -69,8 +69,8 @@ for _j in jobsdb.all():
 
 THEMES = ["science", "tutorial", "commentary", "terracotta", "paper-doc", "prism",
           "aurora", "glass", "memphis", "vapor", "riso", "broadsheet", "luxe",
-          "academia", "y2k", "blueprint", "pop", "zen", "swiss", "bauhaus",
-          "deco", "brutal", "kraft", "neon", "geist", "carbon", "ant",
+          "academia", "y2k", "blueprint", "pop", "ikb", "openflow", "zen", "swiss",
+          "bauhaus", "deco", "brutal", "kraft", "neon", "geist", "carbon", "ant",
           "tdesign", "arco", "material3"]
 
 

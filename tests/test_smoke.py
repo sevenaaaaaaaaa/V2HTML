@@ -146,7 +146,7 @@ c = TestClient(appmod.app)
 H = {"Authorization": "Bearer testtoken123"}
 
 h = c.get("/api/health").json()
-assert h["themes"] == 30 and "push_enabled" in h
+assert h["themes"] == 32 and "push_enabled" in h
 ok("health")
 
 r = c.post("/api/jobs", json={"url": "https://x.ly/v", "language": "xx"},

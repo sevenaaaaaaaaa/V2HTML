@@ -13,10 +13,11 @@
   · 嵌入原视频帧：<figure class="figure frag"><img src="frames/f007_t0123s.jpg"><figcaption>⏱ 01:23 原视频画面</figcaption></figure>
   · 对话气泡：<div class="chat"><div class="bubble"><span class="who">说话人</span>内容</div><div class="bubble r">右侧气泡</div></div>
   操作：→/←/空格 翻页 · O 总览 · F 全屏 · P 打印/导出PDF · T 切换主题 · ? 帮助
-  主题预设（html data-theme，共 30 个，详见 prompts/slides.md）：
+  主题预设（html data-theme，共 32 个，详见 prompts/slides.md）：
   自研：science | tutorial | commentary
   产品风致敬（键名不含商标）：terracotta | paper-doc | prism | aurora
   当代平面风格：glass | memphis | vapor | riso | broadsheet | luxe | academia | y2k | blueprint | pop
+  常设风格（自有资产固化）：ikb（克莱因蓝·瑞士国际主义）| openflow（OpenFlow 设计语言）
   设计运动：zen | swiss | bauhaus | deco | brutal | kraft | neon
   设计系统：geist | carbon | ant | tdesign | arco | material3
   截图模式：slides.html?shot=3 渲染单页（供 PNG 导出与质检）
@@ -194,6 +195,42 @@
 :root[data-theme="prism"] .stat{border-radius:26px;border-top:none;box-shadow:0 14px 34px rgba(139,92,246,.14);background:linear-gradient(180deg,#ffffff,#f6f2ff)}
 :root[data-theme="material3"] .card,:root[data-theme="material3"] .stat{border-radius:28px;border:1px solid rgba(103,80,164,.12)}
 :root[data-theme="material3"] .stat{border-top:none;background:#eaddff}
+/* ── 家族⑤ 常设风格（自有资产固化，无第三方版权争议）── */
+/* ikb 克莱因蓝·瑞士国际主义当代版：高级灰白纸面 + IKB #002FA7 单一强调 + 发丝线/点阵 +
+   超细字重巨号标题 + 等宽大写元数据；8px 模数纪律，全线直角、无阴影无渐变。
+   设计基因均为不受版权保护的风格/数值（瑞士国际主义运动、Klein Blue 色值、Carbon 8px 网格），
+   字体 Inter / JetBrains Mono 为 OFL 开源许可。 */
+:root[data-theme="ikb"]{--bg:#fafaf8;--bg-soft:#f0f0ee;--ink:#0a0a0a;--muted:#737373;--accent:#002FA7;--accent-2:#5B7BFF;--line:rgba(10,10,10,.14);--body-bg:#e9e9e5;
+  --font-display:"Inter","Helvetica Neue","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;font-feature-settings:"tnum"}
+:root[data-theme="ikb"] .cover h1,:root[data-theme="ikb"] .slide h1{font-weight:200;letter-spacing:-.04em;line-height:1.02}
+:root[data-theme="ikb"] .slide h2{font-weight:300;letter-spacing:-.02em}
+:root[data-theme="ikb"] .kicker{font-family:"JetBrains Mono","SF Mono",Menlo,var(--font-display);font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:.28em}
+:root[data-theme="ikb"] .note,:root[data-theme="ikb"] .meta{font-family:"JetBrains Mono","SF Mono",Menlo,var(--font-display);text-transform:uppercase;letter-spacing:.18em;font-weight:400}
+:root[data-theme="ikb"] .card,:root[data-theme="ikb"] .flow .step{background:var(--bg-soft);border:0;border-top:2px solid var(--ink);border-radius:0;box-shadow:none}
+:root[data-theme="ikb"] .stat{background:transparent;border:0;border-top:3px solid var(--accent);border-radius:0;box-shadow:none}
+:root[data-theme="ikb"] .stat .num{background:none;-webkit-text-fill-color:var(--ink);color:var(--ink);font-weight:250;letter-spacing:-.03em}
+:root[data-theme="ikb"] .hrule{height:1px;background:rgba(10,10,10,.35)}
+:root[data-theme="ikb"] .code{background:var(--bg-soft);border:1px solid var(--line);border-radius:0}
+:root[data-theme="ikb"] .bubble{border:1px solid var(--line);border-radius:0;background:var(--bg-soft)}
+:root[data-theme="ikb"] .quote{border-left:3px solid var(--accent);font-weight:300}
+/* openflow 自家设计语言（OpenFlow 前台/后台同源）：暖纸 oklch + Space Grotesk +
+   双 blob 辉光背景 + 玻璃卡片（backdrop-filter + 内高光）+ 胶囊药丸圆角 + 语义 ok 绿辅色 */
+:root[data-theme="openflow"]{--bg:oklch(96.5% .016 85);--bg-soft:#ffffff;--ink:oklch(22% .02 70);--muted:oklch(46% .016 70);--accent:oklch(52% .17 258);--accent-2:oklch(58% .17 152);--line:oklch(86% .014 80);--body-bg:oklch(93% .02 85);
+  --font-display:"Space Grotesk","Inter","PingFang SC","HarmonyOS Sans SC","Noto Sans SC","Microsoft YaHei",sans-serif}
+:root[data-theme="openflow"] .slide{background:
+  radial-gradient(760px 420px at 88% -8%,oklch(52% .17 258/.14),transparent 60%),
+  radial-gradient(600px 380px at -6% 104%,oklch(52% .17 258/.12),transparent 55%),
+  oklch(96.5% .016 85)}
+:root[data-theme="openflow"] .card,:root[data-theme="openflow"] .stat,
+:root[data-theme="openflow"] .flow .step{background:oklch(100% 0 0/.55);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid oklch(100% 0 0/.68);border-radius:18px;
+  box-shadow:0 10px 28px oklch(30% .04 80/.14),inset 0 1px 0 oklch(100% 0 0/.9)}
+:root[data-theme="openflow"] .stat{border-top:none}
+:root[data-theme="openflow"] .stat .num{background:none;-webkit-text-fill-color:var(--accent);color:var(--accent);font-weight:700}
+:root[data-theme="openflow"] .kicker{color:var(--accent);font-weight:600;letter-spacing:.2em}
+:root[data-theme="openflow"] .hrule{height:2px;border-radius:99px;background:linear-gradient(90deg,var(--accent),oklch(52% .17 258/.12))}
+:root[data-theme="openflow"] .bubble{border:1px solid oklch(86% .014 80);border-radius:16px;background:oklch(100% 0 0/.6)}
 /* ═══════════ /主题预设 ═══════════ */
 
 *{box-sizing:border-box;margin:0;padding:0}

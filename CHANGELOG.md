@@ -5,6 +5,7 @@
 产品由 V2HTML 改名 **ConFlow**（目录/仓库名沿用）。
 
 ### 新增
+- **主题库 30 → 32**：新增常设风格 `ikb`（克莱因蓝 · 瑞士国际主义当代版：#002FA7 单一强调、发丝线/点阵、超细字重巨号标题、等宽大写元数据、全线直角无阴影）与 `openflow`（自家设计语言：暖纸 oklch + Space Grotesk + 玻璃卡片 + blob 辉光）；两者均为自有资产固化，无第三方版权争议（风格/色值不受版权保护，字体 OFL，Carbon 8px 模数为开放规范）
 - **P0**：API 鉴权（CONFLOW_TOKEN）；任务列表 SQLite 持久化（重启回载/中断标记）；faster-whisper 无字幕兜底（模型/后端可配）；GitHub Actions 部署通道
 - **P1**：推送适配器层（openflow / WordPress / 静态目录 / Webhook，插件可扩展）；幻灯片逐页自动质检（渲染/启发式双模式）；批量与订阅（频道/播放列表展开、后台订阅管理、定时调度）；CLI 直转 `bin/conflow.py convert`（语义核心解耦为 `engine/` 包）；多语言产出（10 语言，防幻觉规则不降级）；短视频口播脚本（节拍表与 v2video storyboard 同构）
 - **P2**：插件规范 v1（推送目标/新文体/主题 CSS，文件即约定）；视频直出阶段一（storyboard 渲染接口四件套）；OpenFlow 桥接插件交付件与 AI 岗位工具 schema；定制开发展示位

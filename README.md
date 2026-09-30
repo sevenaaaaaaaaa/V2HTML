@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-2563eb.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-3670A0?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/backend-FastAPI-009485?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Slides Themes](https://img.shields.io/badge/slides%20themes-30-8b7cf6)](templates/slides.html)
+[![Slides Themes](https://img.shields.io/badge/slides%20themes-32-8b7cf6)](templates/slides.html)
 
 [在线演示 · 幻灯片](https://nownexts.com/VTH/output/aircAruvnKk/slides.html) · [管理后台](https://nownexts.com/VTH/admin) · [使用指南](docs/USAGE-GUIDE.md) · [功能总附录](#附录--功能总表每个模块的截图--介绍--使用说明)
 
@@ -50,7 +50,7 @@ ConFlow 把这件事变成一条命令：**贴一条 YouTube 链接，20 分钟�
 
 同一份内容，30 种主题一键换肤（放映中按 `T` 实时切换，复制地址栏即分享同款风格）：
 
-![30 主题](docs/images/slides-themes.png)
+![32 主题](docs/images/slides-themes.png)
 
 **「重构」和「截图拼贴」差在哪？** 截图拼贴是时间的碎片；重构是论证的空间化——标题写论断句、每页一个论点、只嵌入含独有信息的原视频帧（图表 / 界面 / 实物）。逐帧对照见前台[「重构长什么样」](https://nownexts.com/VTH/#anatomy)一节，下面是其中两组：
 
@@ -128,7 +128,7 @@ bash server/run.sh                           # http://0.0.0.0:8400
 
 ## 开源开放
 
-**ConFlow 的核心功能——包括最值钱的 `prompts/` 方法论和 30 主题幻灯片引擎——过去、现在、将来都永久开源，MIT 协议。**
+**ConFlow 的核心功能——包括最值钱的 `prompts/` 方法论和 32 主题幻灯片引擎——过去、现在、将来都永久开源，MIT 协议。**
 
 - **商业化边界**：我们还没想好有什么必须商业化的——当前唯一的「付费位」留给**需要定制化开发的项目**（[私有视频源接入 / 企业内容库对接 / 专属文体与主题](docs/SERVICES.md)）。核心开源版永远够用，这是承诺。
 - **开源生态**：ConFlow 是[芭乐派](https://nownexts.com)产品矩阵 Studio 层的本地工具，与 [OpenFlow](https://github.com/sevenaaaaaaaaa/openflow)（入口层）及 MFlow / inFlow / PayFlow / LearnFlow / WebsFlow 等 Flow 家族**互相开源、互相打通**——ConFlow 产出的内容一键进入 OpenFlow 内容库，视频 → 文章 → 站点发布一条链路；[OpenFlow 桥接插件](docs/bridge/BRIDGE-OPENFLOW.md)与 [AI 岗位工具节点](docs/bridge/ai-tool-schema.json)已在路线图落地。
@@ -147,7 +147,7 @@ bash server/run.sh                           # http://0.0.0.0:8400
 
 ### 一、前台提交页 `服务端首页 · /`
 
-整页导览（从上到下：提交 → 三步原理 → 30 主题现场换肤 → 重构对照 → 四文体 → 示例作品 → FAQ → 提交表单）：
+整页导览（从上到下：提交 → 三步原理 → 32 主题现场换肤 → 重构对照 → 四文体 → 示例作品 → FAQ → 提交表单）：
 
 📷 ![前台整页](docs/images/landing-full.png)
 
@@ -163,7 +163,7 @@ bash server/run.sh                           # http://0.0.0.0:8400
 
 **怎么用**：首页「示例作品」区，点卡片上的「幻灯片」或「文章」。
 
-#### 30 主题现场换肤 `首页 · TO THEME LIST`
+#### 32 主题现场换肤 `首页 · TO THEME LIST`
 
 同一页幻灯片内容，30 种设计风格即点即换——自研风、产品风致敬、当代平面、设计运动、设计系统收编五个家族。放映中按 `T` 也能循环，切到喜欢的直接复制地址栏（`?theme=` 参数随 URL 走）分享同款。
 
@@ -237,11 +237,11 @@ PBKDF2 哈希凭据 + HMAC 签名会话 Cookie（7 天有效）。首次部署�
 
 #### 放映操作
 
-`→` `←` `空格` 翻页（要点逐条入场）· `O` 总览模式（缩略图全览，点击跳页）· `F` 全屏 · `P` 打印 / 导出 PDF（浏览器打印对话框，布局已适配）· `T` 实时切换 30 主题（同步到地址栏）· `?` 帮助。
+`→` `←` `空格` 翻页（要点逐条入场）· `O` 总览模式（缩略图全览，点击跳页）· `F` 全屏 · `P` 打印 / 导出 PDF（浏览器打印对话框，布局已适配）· `T` 实时切换 32 主题（同步到地址栏）· `?` 帮助。
 
 **怎么用**：浏览器打开 slides.html，按 `F` 全屏开讲；讲完按 `P` 导出 PDF 存档外发。
 
-#### 30 主题库
+#### 32 主题库
 
 五个家族：自研（science 夜紫 / tutorial 深空蓝 / commentary 暖纸衬线）、产品风致敬（terracotta / paper-doc / prism / aurora，键名无商标）、当代平面（glass / memphis / vapor / riso / broadsheet / luxe / academia / y2k / blueprint / pop，组件级差异不只换色）、设计运动（zen / swiss / bauhaus / deco / brutal / kraft / neon）、设计系统收编（geist / carbon / ant / tdesign / arco / material3）。亮色主题自动适配分隔线与底色。
 

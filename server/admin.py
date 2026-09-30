@@ -218,7 +218,7 @@ def dashboard(request: Request):
         <div class="v" style="font-size:17px">{'✅ ' + info['llm_model'] if info['llm_configured'] else '⚠️ 未配置'}</div></div>
       <div class="card"><div class="k">自动推送</div>
         <div class="v" style="font-size:17px">{'✅ 开启 · ' + (cfg['push'].get('target') or 'openflow') if cfg['push']['enabled'] else '已关闭'}</div></div>
-      <div class="card"><div class="k">幻灯片主题库</div><div class="v">30 <small>个</small></div></div>
+      <div class="card"><div class="k">幻灯片主题库</div><div class="v">32 <small>个</small></div></div>
       <div class="card"><div class="k">前台入口</div>
         <div class="v" style="font-size:15px"><a href="{rp}/" target="_blank">{rp or '/'} ↗</a></div></div>
     </div>

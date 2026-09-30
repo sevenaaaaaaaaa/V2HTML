@@ -72,18 +72,30 @@ ConFlow 把这件事变成一条命令：**贴一条 YouTube 链接，20 分钟�
 
 LLM 写东西会一本正经胡说八道，所以方法论里写死了防线：**数字与命令必须对照转写稿和视频帧逐字核对**；视频没讲清但流程必需的内容，用「💡 补全」显式标注；观点归属严格分离——视频作者的归作者，补全的署名写作者。每页幻灯片都带原视频时间戳，方便回溯核对。
 
-### 双形态运行，同一套方法论
+### 三形态运行，同一套方法论
 
+- **CLI 直转**：`python3 bin/conflow.py convert <url>` 一条命令本机出全套产物，只需一个 OpenAI 兼容 key——最适合脚本化与批量；
 - **客户端（ZCode 技能）**：`/v2html` `/v2video` 一句话驱动，LLM 由 ZCode 承担，质量上限最高；
 - **服务端（FastAPI + 管理后台）**：浏览器提交、任务队列全自动、LLM 在线热配置，适合团队和自己挂在服务器上跑。
 
-两边读的是同一份 `prompts/`——方法论是核心资产，形态只是壳。
+三边读的是同一份 `prompts/` 与同一个 `engine/`——方法论是核心资产，形态只是壳。
 
 ### 诚实边界
 
 无字幕视频由内置 faster-whisper 转写兜底（CPU 可跑）；AI 产出质量取决于你配置的模型。详见[当前边界](#当前边界诚实声明)。
 
 ## 快速开始
+
+### CLI 直转（最简：一条命令，本机出全套）
+
+```bash
+git clone https://github.com/sevenaaaaaaaaa/V2HTML.git && cd V2HTML  # 仓库名沿用 V2HTML,产品名 ConFlow
+pip3 install yt-dlp                      # ffmpeg 需已安装
+export CONFLOW_LLM_API_KEY=你的key       # 任何 OpenAI 兼容接口
+python3 bin/conflow.py convert '<视频URL>'
+```
+
+跑完即得 `output/<id>/doc.md + slides.html`（含逐页质检报告）。频道 / 播放列表链接也能直接转（`--max-items` 限数量）。配置与参数：`python3 bin/conflow.py --help`。
 
 ### 客户端（配合 ZCode，质量上限最高）
 
@@ -257,9 +269,17 @@ PBKDF2 哈希凭据 + HMAC 签名会话 Cookie（7 天有效）。首次部署�
 
 内容区自动防溢出：要点超限自动收缩行距与字号，超长页面在总览里一目了然——不会出现「放映到一半字被裁掉」。
 
-### 四、客户端 CLI `bin/v2h.py（确定性素材管线）`
+### 四、CLI `bin/conflow.py（本机直转）· bin/v2h.py（素材管线）`
 
-📷 ![CLI](docs/images/terminal.png)
+#### convert `python3 bin/conflow.py convert '<视频URL>'`
+
+**一条命令，全链路本机完成**：抓素材 → 转写 → 文体判定 → 写文档 → 编排幻灯片 → 逐页质检。无需服务端、无需 ZCode，只需一个 OpenAI 兼容 key（`CONFLOW_LLM_API_KEY` 或 `~/.conflow/config.json`）。频道 / 播放列表链接直接转（`--max-items` 限数量），进度实时打点，`--json` 输出结构化结果供脚本 / 插件调用。
+
+**怎么用**：`export CONFLOW_LLM_API_KEY=sk-… && python3 bin/conflow.py convert 'https://www.youtube.com/watch?v=xxxx'`；`--doc-type` 指定文体、`--theme` 指定主题、`--no-slides` 只要文档。
+
+#### config `python3 bin/conflow.py config`
+
+查看当前 LLM 配置（key 脱敏）与来源（环境变量 / 配置文件）。
 
 #### fetch `python3 bin/v2h.py fetch '<视频URL>'`
 

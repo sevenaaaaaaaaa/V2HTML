@@ -1,7 +1,7 @@
-"""ConFlow 服务端 · 语义生成管线：分类 → 文档 → 幻灯片。
+"""ConFlow 引擎 · 语义生成管线：分类 → 文档 → 幻灯片。
 
-把 prompts/ 方法论组装为 LLM 提示词，产物与客户端（ZCode 技能）完全同构：
-output/<video_id>/doc.md + slides.html。
+把 prompts/ 方法论组装为 LLM 提示词，产物与所有运行形态完全同构：
+output/<video_id>/doc.md + slides.html。LLM 配置经 engine.llm provider 注入。
 """
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def gen_doc(dtype: str, meta: dict, transcript_md: str,
     user = [f"视频元信息：{json.dumps(meta, ensure_ascii=False, default=str)[:2000]}\n\n"
             f"转写稿（[mm:ss] 为时间戳）：\n{_transcript_tail(transcript_md)}\n\n"
             "按方法论产出 doc.md 正文。只输出 Markdown 正文本身，不要围栏、不要解释。"]
-    if sheet and sheet.exists() and llm.VISION:
+    if sheet and sheet.exists() and llm.cfg().get("vision"):
         user = [{"type": "text", "text": user[0]},
                 llm.image_part(sheet)]
         messages = [{"role": "system", "content": system},

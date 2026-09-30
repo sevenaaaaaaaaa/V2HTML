@@ -29,10 +29,12 @@ from fastapi.responses import (FileResponse, JSONResponse, PlainTextResponse,
 from fastapi.staticfiles import StaticFiles
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "bin"))
 import v2h  # noqa: E402  复用客户端素材管线（fetch/transcribe/frames）
 
-from server import auth, batch, generate, jobsdb, llm, pushers, qc, store  # noqa: E402
+from engine import batch, generate, qc  # noqa: E402  语义引擎（与形态解耦）
+from server import auth, jobsdb, llm, pushers, store  # noqa: E402
 from server.admin import router as admin_router  # noqa: E402
 
 OUT = ROOT / "output"

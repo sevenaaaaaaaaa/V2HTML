@@ -28,8 +28,8 @@
   验收：一次任务可选产出「文章 / 幻灯片 / 短视频脚本」三件套。
 - [ ] **OpenFlow 桥接插件** — 以 OpenFlow PluginSystem 形态提供入口：插件挂后台菜单与配置页（服务器地址 + token），提交/轮询走 ConFlow HTTP API，任务完成后经 openflow cron 心跳原生写入内容库（替代文件级 pushof，走内部 API 更干净）。ThirdC 若有同类插件机制则复用同一桥接模式。
   验收：openflow 后台出现 ConFlow 页面，提交任务、查看进度、成品直接进入 content-hub。
-- [ ] **CLI 直转模式** — 无服务端、无浏览器的本机形态：`conflow convert <url>`（bin/v2h.py 素材管线 + generate.py 的 LLM 组装 + 本机任意 OpenAI 兼容 key），产出 doc.md + slides.html；与 ZCode 技能（已有客户端形态）、服务端构成三形态。
-  验收：本机一条命令完成全链路，不需要 ZCode 或 FastAPI。
+- [x] **CLI 直转模式** — `bin/conflow.py convert <url>`：fetch → 转写 → 判定 → 文档 → 幻灯片 → 质检一条命令全链路，配置走 `CONFLOW_LLM_*` / `~/.conflow/config.json`；语义核心解耦为 `engine/` 包（llm provider 模式：服务端注入 store 热配置，CLI 用 env，插件可程序化注入），服务端与 CLI 共用。
+  验收：本地真实 E2E（真实抓取 + mock LLM 端点）73s 出 doc + slides + render 质检；服务端回归（health/jobs）通过；频道链接可批量逐个转换。
 - [x] **推送适配器抽象** — `server/pushers.py` 统一调度，官方适配 openflow（原有）/ WordPress / 静态目录 / Webhook 四种目标，后台可切换与配置；新目标约 30 行适配器即可注册。
   验收：本地 mock 服务四适配器全通过（含 openflow 幂等与备份、webhook secret 头、WP Basic 认证）；线上以 static 目标实推一个已完成任务验证后切回 openflow。
 - [x] **质量基线自动化** — 引擎内置 `?qc=1` 自检（每页缩放比/溢出 JSON 报告），服务端产出后自动质检：有 headless Chrome 走真实渲染判定，无浏览器回退内容量预算启发式（按真实成品校准）；任务详情逐页标注 ok/warn/fail 与原因，不拦截任务。

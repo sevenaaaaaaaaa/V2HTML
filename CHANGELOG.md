@@ -8,6 +8,7 @@
 - **P0**：API 鉴权（CONFLOW_TOKEN）；任务列表 SQLite 持久化（重启回载/中断标记）；faster-whisper 无字幕兜底（模型/后端可配）；GitHub Actions 部署通道
 - **P1**：推送适配器层（openflow / WordPress / 静态目录 / Webhook，插件可扩展）；幻灯片逐页自动质检（渲染/启发式双模式）；批量与订阅（频道/播放列表展开、后台订阅管理、定时调度）；CLI 直转 `bin/conflow.py convert`（语义核心解耦为 `engine/` 包）；多语言产出（10 语言，防幻觉规则不降级）；短视频口播脚本（节拍表与 v2video storyboard 同构）
 - **P2**：插件规范 v1（推送目标/新文体/主题 CSS，文件即约定）；视频直出阶段一（storyboard 渲染接口四件套）；OpenFlow 桥接插件交付件与 AI 岗位工具 schema；定制开发展示位
+- **收尾**：订阅源级 language/script/storyboard 参数（老库自愈迁移）；mock E2E 套件 `tests/test_smoke.py`（11 项）进 CI；CI 工作流；CHANGELOG 与 .env.example
 - 文档：README 按 OpenFlow 表述逻辑重做（架构示意图/真实截图/功能总附录）；docs/ ROADMAP · USAGE-GUIDE · PLUGIN-DEV · SERVICES · BRIDGE-OPENFLOW；MIT LICENSE
 
 ### 修复

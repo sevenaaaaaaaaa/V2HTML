@@ -6,14 +6,13 @@
 
 ## 待办清单（当前排序，做完一项勾一项）
 
-1. **OpenFlow 桥接插件宿主联调**（P1 收尾）— 交付件已就绪（deploy/openflow-plugin/ + docs/bridge/），待 OpenFlow 侧排期安装与端到端联调。
+1. **OpenFlow 桥接插件启用与联调**（P1 收尾）— ~~交付件~~/~~入仓~~/~~部署~~ 已完成（2026-10-01，`enabled_by_default: false` 文件惰性）；剩余：后台「插件管理」启用 + 填服务器地址/Token + 端到端提交验证（需 openflow 管理员操作）。
 2. **线上 demo 扩到 6–8 条**（P0 余项）— 补多主题/多文体/多语言成品，撑起示例作品区门面。
 3. **视频直出 · 阶段二（渲染成片）**（P2）— Remotion / 云端渲染选型；storyboard.json 接口已冻结。
 4. **一键安装体验**（P0 余项）— Docker 镜像与起步体验（评估中）。
 5. **插件规范 v2**（P2）— 钩子（doc_done / before_push / after_push）、视频源注册、插件管理页。
-6. **定制开发案例补录**（P2 展示位）— 首个定制项目落地后回填 docs/SERVICES.md。
-7. **订阅参数增强**（小项）— 订阅源级 language / script / storyboard 配置（当前新任务默认中文、仅双产出）。
-8. **CI 补强**（小项）— ci.yml 已覆盖语法/导入/引擎与服务端冒烟；补 script-short 与 storyboard 的 mock LLM 端到端用例。
+6. **CI 补强余项**— tests/test_smoke.py（11 项）已入库并进 CI；可再补：真机 Chrome 渲染质检路径用例。
+7. **定制开发案例补录**（P2 展示位）— 首个定制项目落地后回填 docs/SERVICES.md。
 
 ## P0 · 工程还债（2026-09-30 完成）
 

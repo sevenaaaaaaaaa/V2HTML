@@ -100,6 +100,7 @@ def _convert_one(url: str, args) -> dict:
 
     qc_report = None
     slides_rel = None
+    script_rel = None
     if not args.no_slides:
         log(f"LLM：编排幻灯片…（语言：{args.language}）")
         frames = json.loads((workdir / "frames.json").read_text(encoding="utf-8"))
@@ -121,8 +122,17 @@ def _convert_one(url: str, args) -> dict:
             if p["status"] != "ok":
                 log(f"  ⚠ P{p['page']} {p['status']}：{p['reason']}")
 
+    if args.script:
+        log(f"LLM：短视频口播脚本…（语言：{args.language}）")
+        script_path = workdir / "script.md"
+        script_path.write_text(
+            generate.gen_short_script(dtype, doc_path.read_text(encoding="utf-8"),
+                                      meta, language=args.language), encoding="utf-8")
+        script_rel = str(script_path.relative_to(ROOT))
+        log(f"脚本完成 → {script_rel}")
+
     return {"video_id": vid, "title": title, "doc_type": dtype, "language": args.language,
-            "doc": str(doc_path.relative_to(ROOT)), "slides": slides_rel,
+            "doc": str(doc_path.relative_to(ROOT)), "slides": slides_rel, "script": script_rel,
             "qc": qc_report, "elapsed_sec": round(time.time() - t0, 1)}
 
 
@@ -163,6 +173,8 @@ def cmd_convert(args) -> int:
         print(f"\n  📄 {summary['doc']}")
         if summary["slides"]:
             print(f"  🖥 {summary['slides']}   （浏览器打开放映：→ 翻页 · T 换主题 · P 导出 PDF）")
+        if summary["script"]:
+            print(f"  🎬 {summary['script']}")
         print()
     return 0
 
@@ -192,6 +204,7 @@ def main() -> int:
     p.add_argument("--max-frames", type=int, default=24)
     p.add_argument("--max-items", type=int, default=5, help="频道/播放列表最多转换几个")
     p.add_argument("--no-slides", action="store_true", help="只产出文档")
+    p.add_argument("--script", action="store_true", help="追加产出 45–90s 短视频口播脚本 script.md")
     p.add_argument("--no-doc", action="store_true", help="跳过文档重写（配合已有 doc.md 只做幻灯片）")
     p.add_argument("--json", action="store_true", help="结果以 JSON 输出到 stdout（供脚本/插件调用）")
     p.set_defaults(fn=cmd_convert)

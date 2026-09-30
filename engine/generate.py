@@ -119,6 +119,20 @@ def gen_slides(dtype: str, doc_md: str, frames: list[dict],
                                     temperature=0.5))
 
 
+# ------------------------------------------------- 4. 短视频口播脚本 ----
+
+def gen_short_script(dtype: str, doc_md: str, meta: dict, language: str = "zh") -> str:
+    """doc.md → 45–90s 口播脚本（节拍表与 v2video storyboard 同构）。"""
+    system = (_read(PROMPTS / "script-short.md") + lang_directive(language)
+              + "\n\n文体背景：源视频判定为 " + dtype + "，脚本口吻随之调整（教程偏步骤、评论偏观点、科普偏直觉）。")
+    user = (f"doc.md 全文（唯一内容来源）：\n\n{doc_md}\n\n"
+            f"视频元信息：{json.dumps({k: meta.get(k) for k in ('title', 'uploader', 'url')}, ensure_ascii=False)}\n\n"
+            "按方法论产出 script.md。只输出脚本本身（Markdown），不要围栏、不要解释。")
+    return llm.strip_fence(llm.chat([{"role": "system", "content": system},
+                                     {"role": "user", "content": user}],
+                                    temperature=0.5))
+
+
 def build_deck(fragment: str, title: str, theme: str, language: str = "zh") -> str:
     """把生成的 <section> 片段注入幻灯片引擎，产出自包含 slides.html。"""
     tpl = _read(TEMPLATE)

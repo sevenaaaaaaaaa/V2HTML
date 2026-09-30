@@ -309,6 +309,10 @@ def job_detail(request: Request, jid: str):
     art = ""
     if job["status"] == "done" and job["video_id"]:
         v = job["video_id"]
+        from .app import OUT as OUT_DIR
+        has_script = (OUT_DIR / v / "script.md").exists()
+        script_link = (f"<a class='btn sm ghost' href='{rp}/output/{v}/script.md' "
+                       f"target='_blank'>🎬 脚本</a>" if has_script else "")
         qcp = ""
         if job.get("qc") and job["qc"].get("pages"):
             chips = "".join(
@@ -335,6 +339,7 @@ def job_detail(request: Request, jid: str):
           <p style="font-size:14px;line-height:2.3">
             <a class="btn sm" href="{rp}/output/{v}/slides.html" target="_blank">▶ 放映幻灯片</a>
             <a class="btn sm ghost" href="{rp}/api/jobs/{jid}/doc" target="_blank">文档 doc.md</a>
+            {script_link}
             <a class="btn sm ghost" href="{rp}/output/{v}/transcript.md" target="_blank">转写稿</a>
             <a class="btn sm ghost" href="{rp}/output/{v}/sheet.jpg" target="_blank">关键帧联览图</a></p>
           {pushed}

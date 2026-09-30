@@ -166,6 +166,14 @@ def _run_job(job: dict) -> None:
             qsum += f"，{job['qc']['fail']} 不合格"
         _log(job, qsum)
         _log(job, f"完成：doc.md + slides.html（主题 {theme}）")
+        if job.get("script"):
+            _log(job, "LLM：短视频口播脚本…")
+            try:
+                script_md = generate.gen_short_script(dtype, doc_md, meta, language=lang)
+                (workdir / "script.md").write_text(script_md, encoding="utf-8")
+                _log(job, f"脚本完成 → script.md（{len(script_md)} 字符）")
+            except Exception as exc:  # noqa: BLE001  脚本失败不影响主产物
+                _log(job, f"脚本生成失败：{exc}")
         job["status"] = "done"
         jobsdb.save(job)
 
@@ -220,12 +228,14 @@ def push_job(jid: str) -> dict:
 # ------------------------------------------------------------------ 路由 ----
 
 def _spawn(url: str, doc_type: str, theme: str, max_frames: int,
-           video_id: str | None = None, language: str = "zh") -> dict:
+           video_id: str | None = None, language: str = "zh",
+           script: bool = False) -> dict:
     """建一个任务并入队（批量/订阅与单个提交共用）。"""
     job = {
         "id": uuid.uuid4().hex[:12], "url": url,
         "doc_type": doc_type, "theme": theme, "max_frames": max_frames,
         "language": language if language in generate.LANGUAGES else "zh",
+        "script": bool(script),
         "status": "queued", "steps": [], "video_id": video_id,
         "title": None, "pushed": None, "error": None, "qc": None,
         "t0": time.time(), "created": time.strftime("%m-%d %H:%M"),
@@ -270,6 +280,7 @@ async def create_job(body: dict, request: Request,
     language = (body.get("language") or "zh").lower()
     if language not in generate.LANGUAGES:
         raise HTTPException(400, f"未知语言，可选：{', '.join(generate.LANGUAGES)}")
+    want_script = bool(body.get("script"))
 
     if batch.looks_batch(url):
         try:
@@ -288,12 +299,14 @@ async def create_job(body: dict, request: Request,
                         skipped += 1
                         continue
                     created.append(_spawn(e["url"], dtype, theme, max_frames,
-                                          video_id=e["id"], language=language)["id"])
+                                          video_id=e["id"], language=language,
+                                          script=want_script)["id"])
                 return {"batch": created, "skipped": skipped,
                         "total": len(entries), "titles": [e["title"] for e in entries]}
             if entries:
                 url = entries[0]["url"]
-    return {"id": _spawn(url, dtype, theme, max_frames, language=language)["id"]}
+    return {"id": _spawn(url, dtype, theme, max_frames, language=language,
+                         script=want_script)["id"]}
 
 
 @app.get("/api/jobs")
@@ -322,6 +335,7 @@ def job_detail(jid: str, request: Request, authorization: str = Header(default="
             "artifacts": {
                 "slides": f"{base}/slides.html" if vid else None,
                 "doc": f"api/jobs/{jid}/doc" if vid else None,
+                "script": f"{base}/script.md" if vid else None,
                 "transcript": f"{base}/transcript.md" if vid else None,
                 "sheet": f"{base}/sheet.jpg" if vid else None,
             }}

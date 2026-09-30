@@ -68,6 +68,10 @@ ConFlow 把这件事变成一条命令：**贴一条 YouTube 链接，20 分钟�
 
 教程、科普、口播评论、评测访谈，读者的期待完全不同。ConFlow 为每种文体沉淀了专属写作法（`prompts/doc-*.md`）：教程要命令逐字核对 + 避坑清单；科普要直觉 → 机制 → 边界分层递进 + FAQ；评论要论点拆解 + 论据可信度分级（✅⚠️❌）；评测要评分卡前置。系统先判定文体，再按对应方法论执行——也可以手工指定。
 
+### 短视频脚本版：内容有了第二分发形态
+
+同一任务可勾选追加产出 **45–90 秒口播短视频脚本**（`script.md`）：节拍表逐拍给出秒数、口播词、画面提示、屏幕大字，秒数按语速实算、数字只来自已核对的 doc.md；节拍字段与 v2video 的 storyboard.json 同构，分镜提示词包可以直接接手——**视频 → 文章 → 幻灯片 → 短视频物料，一条流水线**。前台勾选「🎬 短视频脚本」、CLI `--script`、API `script: true`。
+
 ### 十种产出语言，防幻觉规则不降级
 
 同一视频可指定产出中文 / English / 日本語 / 한국어 / Español / Français / Deutsch / Português / Русский / العربية 版本的文章与幻灯片（前台表单、CLI `--language`、API `language` 参数均可指定）。语言指令是硬性要求：标题、正文、要点、图表标注、页脚全部切换，代码与专名保留原文；**防幻觉规则不因语言改变**——数字逐字核对、补全显式标注、观点归属分离照常生效。
@@ -211,7 +215,7 @@ PBKDF2 哈希凭据 + HMAC 签名会话 Cookie（7 天有效）。首次部署�
 
 #### 任务详情 `后台 → 任务管理 → 点任一任务`
 
-单个任务的完整档案：状态卡（进行中每 5 秒自动刷新）、**逐步计时的执行日志**（代理探测 → 素材就绪 → 类型判定 → 文档写作 → 幻灯片编排 → 推送）、产物四件套入口（放映幻灯片 / 文档 doc.md / 转写稿 / 关键帧联览图）、文档内嵌预览、以及推送结果横幅（草稿态 + slug，直达 OpenFlow 后台发布）。
+单个任务的完整档案：状态卡（进行中每 5 秒自动刷新）、**逐步计时的执行日志**（代理探测 → 素材就绪 → 类型判定 → 文档写作 → 幻灯片编排 → 推送）、产物入口（放映幻灯片 / 文档 doc.md / 🎬 脚本 script.md（勾选了短视频脚本时）/ 转写稿 / 关键帧联览图）、文档内嵌预览、以及推送结果横幅（草稿态 + slug，直达 OpenFlow 后台发布）。
 
 **怎么用**：任务管理 → 点标题进详情；产物按钮直接打开对应文件。
 
@@ -313,7 +317,7 @@ output/ 全部产物一览：视频 ID、时长、帧数、已有哪些产物（
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, language: zh\|en\|ja\|ko\|es\|fr\|de\|pt\|ru\|ar, max_frames}`；频道/播放列表 URL 自动展开为任务队列（`max_items` 限数量），返回 `{batch: [ids], skipped}` |
+| `POST` | `/api/jobs` | 创建任务 `{url, doc_type: auto\|tutorial\|science\|commentary\|other, theme, language: zh\|en\|…, script: bool, max_frames}`；频道/播放列表 URL 自动展开为任务队列（`max_items` 限数量），返回 `{batch: [ids], skipped}` |
 | `GET` | `/api/jobs` · `/api/jobs/{id}` | 任务列表 / 详情（状态、进度、日志、产物链接） |
 | `GET` | `/api/jobs/{id}/doc` | 文档纯文本 |
 | `POST` | `/api/jobs/{id}/retry` `/push` `/delete` | 重试 / 推送 openflow / 删除 |

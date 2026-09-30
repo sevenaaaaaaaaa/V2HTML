@@ -6,11 +6,10 @@
 
 ## 待办清单（当前排序，做完一项勾一项）
 
-1. **短视频脚本版**（P1）— doc.md 衍生口播脚本，衔接 v2video 分镜链路，打通「视频→文章→视频物料」环。
-2. **OpenFlow 桥接插件**（P1）— PluginSystem 挂菜单/配置页，走 ConFlow API + openflow 心跳原生写内容库。
-3. **线上 demo 扩到 6–8 条**（P0 余项）— 补多主题/多文体成品，撑起示例作品区门面。
-4. **一键安装体验**（P0 余项）— Docker 镜像与起步体验（评估中）。
-5. **视频直出 / 正式插件规范 / AI 岗位工具 / 定制开发案例**（P2，见下）。
+1. **OpenFlow 桥接插件**（P1）— PluginSystem 挂菜单/配置页，走 ConFlow API + openflow 心跳原生写内容库。
+2. **线上 demo 扩到 6–8 条**（P0 余项）— 补多主题/多文体成品，撑起示例作品区门面。
+3. **一键安装体验**（P0 余项）— Docker 镜像与起步体验（评估中）。
+4. **视频直出 / 正式插件规范 / AI 岗位工具 / 定制开发案例**（P2，见下）。
 
 ## P0 · 工程还债（2026-09-30 完成）
 
@@ -32,8 +31,8 @@
   验收：本地展开真实频道（3Blue1Brown）15 条元数据；TestClient 全流程通过（批量创建 / 去重 / 订阅 check-toggle-delete / 鉴权）。
 - [x] **多语言产出** — `engine/generate.py` 语言指令注入（zh 默认免指令；en/ja/ko/es/fr/de/pt/ru/ar 硬性要求全产出一个语言，代码/专名保留原文），doc 与 slides 同语言，`html lang` 同步；前台表单 / CLI `--language` / API `language` 三处入口。
   验收：引擎级断言（英文指令进 doc/slides 的 system prompt、`<html lang="en">`、默认中文无指令）；线上真实 LLM 英文任务验收（见部署记录）。
-- [ ] **短视频脚本版** — doc.md 衍生口播脚本（复用口播节拍写作法），衔接 v2video 分镜链路。
-  验收：一次任务可选产出「文章 / 幻灯片 / 短视频脚本」三件套。
+- [x] **短视频脚本版** — 新方法论 `prompts/script-short.md`（45–90s 节拍表：秒数按语速实算、口播词/画面提示/屏幕大字逐拍给出，数字只来自已核对的 doc.md；节拍字段与 reverse-storyboard 的 storyboard.json 同构），engine `gen_short_script`（语言贯通），CLI `--script` / API `script: true` / 前台勾选，产物 `output/<id>/script.md`。
+  验收：引擎级断言（脚本 prompt 含方法论文案 + 语言指令；产物含节拍表/衔接 v2video 结构）；API script 参数入队、admin 产物链接按文件存在条件显示；线上真实 LLM 任务验收（见部署记录）。
 - [ ] **OpenFlow 桥接插件** — 以 OpenFlow PluginSystem 形态提供入口：插件挂后台菜单与配置页（服务器地址 + token），提交/轮询走 ConFlow HTTP API，任务完成后经 openflow cron 心跳原生写入内容库（替代文件级 pushof，走内部 API 更干净）。ThirdC 若有同类插件机制则复用同一桥接模式。
   验收：openflow 后台出现 ConFlow 页面，提交任务、查看进度、成品直接进入 content-hub。
 - [x] **CLI 直转模式** — `bin/conflow.py convert <url>`：fetch → 转写 → 判定 → 文档 → 幻灯片 → 质检一条命令全链路，配置走 `CONFLOW_LLM_*` / `~/.conflow/config.json`；语义核心解耦为 `engine/` 包（llm provider 模式：服务端注入 store 热配置，CLI 用 env，插件可程序化注入），服务端与 CLI 共用。

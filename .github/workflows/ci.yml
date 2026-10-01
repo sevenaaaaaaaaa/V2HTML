@@ -43,6 +43,6 @@ jobs:
           from server import app as appmod
           c = TestClient(appmod.app)
           h = c.get('/api/health').json()
-          assert h['themes'] == 30
+          assert h['themes'] == 32
           assert c.get('/api/jobs').status_code in (200, 401)
           print('server smoke ok')"

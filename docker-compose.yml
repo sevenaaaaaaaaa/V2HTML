@@ -4,7 +4,7 @@ services:
     ports:
       - "${CONFLOW_BIND:-127.0.0.1:8410}:8400"
     environment:
-      # 语义生成必需：任何 OpenAI 兼容接口（默认智谱 GLM；.env 可覆盖为 DeepSeek 等）
+      # 语义生成必需：任何 OpenAI 兼容接口（默认智谱 GLM；.env 可覆盖为其他兼容端点）
       # 变量已改名 CONFLOW_*，旧 V2HTML_* 写法仍被识别（容器内代码回退读取）
       CONFLOW_LLM_BASE_URL: "${CONFLOW_LLM_BASE_URL:-${V2HTML_LLM_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}}"
       CONFLOW_LLM_API_KEY: "${CONFLOW_LLM_API_KEY:-${V2HTML_LLM_API_KEY:?请在 .env 或环境变量中提供}}"

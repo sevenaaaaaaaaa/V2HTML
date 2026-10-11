@@ -11,8 +11,8 @@
 
 配置（优先级：环境变量 > ~/.conflow/config.json）:
   export CONFLOW_LLM_API_KEY=sk-…               # 任何 OpenAI 兼容接口
-  export CONFLOW_LLM_BASE_URL=https://api.deepseek.com/v1
-  export CONFLOW_LLM_MODEL=deepseek-chat
+  export CONFLOW_LLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+  export CONFLOW_LLM_MODEL=glm-4.7
   或写入 ~/.conflow/config.json: {"llm": {"api_key": "sk-…", "base_url": "…", "model": "…"}}
 
 依赖: yt-dlp（素材；无字幕视频推荐 faster-whisper）。语义引擎在本仓库 engine/，
